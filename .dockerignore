@@ -1,0 +1,12 @@
+.next/cache
+node_modules
+.git
+.husky
+.idea
+*.log
+Dockerfile*
+docker-compose*
+.env
+.env.local
+.env.development
+.env.production
