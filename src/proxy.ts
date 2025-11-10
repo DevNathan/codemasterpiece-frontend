@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ulid } from "ulid";
 import { COOKIES } from "@/lib/constants/cookies";
+import { SuccessResponse } from "@/lib/api/fetchSchema";
 
 const INTERNAL_API_DOMAIN = process.env.INTERNAL_API_DOMAIN!;
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -12,11 +13,8 @@ const WHITE_LIST = [
   /^\/posts(?:\/.*)?$/, // /posts, /posts/**
   /^\/post(?:\/.*)?$/, // /post, /post/**
   /^\/guest$/, // 방명록
-  /^\/policy$/, // 방명록
+  /^\/guest$/, // 방명록
 ];
-
-/** API 라우트 식별 */
-const API_ROUTE = /^\/api(?:\/|$)/;
 
 /** 정적/내부 리소스는 미들웨어 제외 */
 const INTERNAL_SKIP = [
@@ -25,7 +23,6 @@ const INTERNAL_SKIP = [
   /^\/robots\.txt$/,
   /^\/sitemap\.xml$/,
   /^\/images\//,
-  /^\/assets\//,
   /^\/fonts\//,
 ];
 
@@ -66,7 +63,11 @@ async function pingSession(
     });
     if (resp.status === 401) return { ok: false };
     if (!resp.ok) return { ok: false };
-    const data = (await resp.json()) as { ok: boolean; expMs?: number };
+    const { data } = (await resp.json()) as SuccessResponse<{
+      ok: boolean;
+      expMs?: number;
+    }>;
+
     return { ok: !!data?.ok, expMs: data?.expMs };
   } catch {
     return isProd ? { ok: false } : { ok: true };
