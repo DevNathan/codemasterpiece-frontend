@@ -64,11 +64,14 @@ export default function PostDetailView({ slug, actor }: Props) {
   });
 
   const actionRef = useRef<Element | null>(null);
+  const enabledViewObserver = mounted && !!data?.postId;
+
   useViewOnVisible(actionRef, {
     postId: data?.postId ?? "",
     queryKey,
     threshold: 0.25,
     resync: "none",
+    enabled: enabledViewObserver,
   });
 
   // 삭제 다이얼로그
@@ -131,6 +134,7 @@ export default function PostDetailView({ slug, actor }: Props) {
       <div className="max-w-[1200px] w-full mx-auto">
         <div className="relative">
           <Content isPublished={published} mainContent={mainContent} />
+
           <AuthorBox className="m-4" />
 
           <LikeAndShare

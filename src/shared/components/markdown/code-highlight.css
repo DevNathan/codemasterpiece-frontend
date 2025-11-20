@@ -1,0 +1,276 @@
+/* ===================================================================
+   CODE HIGHLIGHT 컴바이너
+=================================================================== */
+
+/* -----------------------------
+   공통 기반 스타일
+------------------------------ */
+
+.cm-codeblock code {
+    background: transparent;
+    color: var(--cm-code-fg);
+    font-family: var(--cm-code-font, ui-monospace, monospace);
+}
+
+.cm-codeblock pre {
+    background: transparent;
+    color: inherit;
+}
+
+/* highlight.js 기본 구조를 변수로만 제어 */
+.hljs {
+    color: var(--cm-code-fg);
+    background: transparent;
+}
+
+/* 공통 토큰 매핑 */
+.hljs-comment,
+.hljs-quote,
+.hljs-code,
+.hljs-formula {
+    color: var(--cm-code-comment);
+    font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-doctag,
+.hljs-formula,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+    color: var(--cm-code-keyword);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+    color: var(--cm-code-string);
+}
+
+.hljs-number,
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+    color: var(--cm-code-number);
+}
+
+.hljs-literal {
+    color: var(--cm-code-literal);
+}
+
+.hljs-title,
+.hljs-name,
+.hljs-selector-tag,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-section {
+    color: var(--cm-code-title);
+}
+
+.hljs-built_in,
+.hljs-title.class_,
+.hljs-class .hljs-title {
+    color: var(--cm-code-built-in);
+}
+
+.hljs-subst {
+    color: var(--cm-code-fg);
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
+}
+
+.hljs-link {
+    text-decoration: underline;
+}
+
+/* pre 기본 패딩/스크롤 */
+pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 1em;
+}
+
+code.hljs {
+    padding: 3px 5px;
+}
+
+
+/* ===============================================================
+   ATOM ONE — LIGHT
+================================================================ */
+
+html[data-code-theme="atom-one"][class~="light"] {
+    --cm-code-fg: #383a42;         /* 기본 글자색 */
+    --cm-code-comment: #a0a1a7;    /* comment, quote */
+
+    --cm-code-keyword: #a626a4;    /* keyword, doctag, formula */
+    --cm-code-string: #50a14f;     /* string, regexp, addition, attribute */
+    --cm-code-number: #986801;     /* number, attr, variable, type */
+    --cm-code-title: #4078f2;      /* title, selector-id, link, symbol, bullet, meta */
+    --cm-code-built-in: #c18401;   /* built_in, class title */
+
+    --cm-code-literal: #0184bb;    /* literal */
+    --cm-code-symbol: #4078f2;     /* symbol, bullet */
+}
+
+
+/* ===============================================================
+   ATOM ONE — DARK
+================================================================ */
+
+html[data-code-theme="atom-one"][class~="dark"] {
+    --cm-code-fg: #abb2bf;
+    --cm-code-comment: #5c6370;
+
+    --cm-code-keyword: #c678dd;
+    --cm-code-string: #98c379;
+    --cm-code-number: #d19a66;
+    --cm-code-title: #61aeee;
+    --cm-code-built-in: #e6c07b;
+
+    --cm-code-literal: #56b6c2;
+    --cm-code-symbol: #61aeee;
+}
+
+
+/* ===============================================================
+   GITHUB — LIGHT
+================================================================ */
+
+html[data-code-theme="github"][class~="light"] {
+    /* hljs 기본 */
+    --cm-code-fg: #24292e;
+    --cm-code-comment: #6a737d;   /* comment, code, formula */
+
+    /* prettylights-syntax-keyword */
+    --cm-code-keyword: #d73a49;
+
+    /* prettylights-syntax-string */
+    --cm-code-string: #032f62;
+
+    /* prettylights-syntax-constant (attr, number, variable 등) */
+    --cm-code-number: #005cc5;
+
+    /* entity (class/function title) */
+    --cm-code-title: #6f42c1;
+
+    /* built_in, symbol → variable 색상 */
+    --cm-code-built-in: #e36209;
+
+    /* literal/constant 계열 */
+    --cm-code-literal: #005cc5;
+
+    /* symbol/bullet 등 */
+    --cm-code-symbol: #e36209;
+}
+
+
+/* ===============================================================
+   GITHUB — DARK
+================================================================ */
+
+html[data-code-theme="github"][class~="dark"] {
+    /* hljs 기본 */
+    --cm-code-fg: #c9d1d9;
+    --cm-code-comment: #8b949e;
+
+    /* prettylights-syntax-keyword */
+    --cm-code-keyword: #ff7b72;
+
+    /* prettylights-syntax-string */
+    --cm-code-string: #a5d6ff;
+
+    /* prettylights-syntax-constant (attr, literal, number 등) */
+    --cm-code-number: #79c0ff;
+
+    /* entity (class/function title) */
+    --cm-code-title: #d2a8ff;
+
+    /* built_in, symbol */
+    --cm-code-built-in: #ffa657;
+
+    /* literal/constant 계열 */
+    --cm-code-literal: #79c0ff;
+
+    /* symbol/bullet 등 */
+    --cm-code-symbol: #ffa657;
+}
+
+/* ===============================================================
+   STACKOVERFLOW — LIGHT
+================================================================ */
+
+html[data-code-theme="stackoverflow"][class~="light"] {
+    /* 기본 */
+    --cm-code-fg: #2f3337;
+    --cm-code-comment: #656e77;
+
+    /* keyword, selector-tag, meta-keyword, doctag, section */
+    --cm-code-keyword: #015692;
+
+    /* string, regexp, symbol, variable, template-variable, link, selector-attr */
+    --cm-code-string: #54790d;
+
+    /* namespace 계열 (name, type, number, id, quote 등) */
+    --cm-code-number: #b75501;
+
+    /* literal, built_in, title */
+    --cm-code-title: #b75501;
+
+    /* built_in / class title / literal — 동일 */
+    --cm-code-built-in: #b75501;
+
+    /* literal 따로 존재하므로 그대로 */
+    --cm-code-literal: #b75501;
+
+    /* punctuation 계열 */
+    --cm-code-symbol: #803378;
+}
+
+/* ===============================================================
+   STACKOVERFLOW — DARK
+================================================================ */
+
+html[data-code-theme="stackoverflow"][class~="dark"] {
+    /* 기본 */
+    --cm-code-fg: #ffffff;
+    --cm-code-comment: #999999;
+
+    /* keyword, selector-tag, meta-keyword, doctag, section */
+    --cm-code-keyword: #88aece;
+
+    /* string, regexp, symbol, variable, template-variable, link, selector-attr */
+    --cm-code-string: #b5bd68;
+
+    /* namespace 계열 (name, type, number, id, quote 등) */
+    --cm-code-number: #f08d49;
+
+    /* literal / title / built_in */
+    --cm-code-title: #f08d49;
+
+    /* built_in / class title */
+    --cm-code-built-in: #f08d49;
+
+    /* literal */
+    --cm-code-literal: #f08d49;
+
+    /* punctuation 계열 */
+    --cm-code-symbol: #c59bc1;
+}

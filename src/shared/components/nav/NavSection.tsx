@@ -16,6 +16,7 @@ import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import CategoryItem from "@/shared/components/nav/CategoryItem";
 import { useAuth } from "@/contexts/UserContext";
 import dynamic from "next/dynamic";
+import CodeThemeSelector from "@/shared/components/nav/CodeThemeSelector";
 
 const CategoryDndTree = dynamic(
   () => import("@/features/category/dnd/CategoryDndTree"),
@@ -68,6 +69,7 @@ const NavSection = () => {
       </SidebarMenu>
 
       <div className="flex justify-end items-center p-3 gap-3 border-t">
+        <CodeThemeSelector />
         <PointChanger />
         <ThemeChanger />
       </div>

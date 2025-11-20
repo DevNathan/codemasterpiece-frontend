@@ -2,6 +2,8 @@
 
 import React, { ReactNode } from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { CodeThemeProvider } from "@/contexts/CodeThemeProvider";
+import { PointThemeProvider } from "@/contexts/PointThemeProvider";
 
 const ThemeProvider = ({ children }: { children: ReactNode }) => {
   return (
@@ -11,7 +13,9 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
       enableSystem={true}
       disableTransitionOnChange={false}
     >
-      {children}
+      <PointThemeProvider>
+        <CodeThemeProvider>{children}</CodeThemeProvider>
+      </PointThemeProvider>
     </NextThemesProvider>
   );
 };

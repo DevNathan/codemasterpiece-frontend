@@ -7,6 +7,7 @@ import { Toaster as Sooner } from "sonner";
 import AuthToastHandler from "@/app/LoginToastHandler";
 import RQProvider from "@/contexts/RQProvider";
 import { AuthDialogProvider } from "@/contexts/AuthDialogProvider";
+import { ImageViewerProvider } from "@/contexts/ImageViewProvider";
 
 type Props = { children: ReactNode };
 
@@ -18,11 +19,13 @@ export default async function Providers({ children }: Props) {
           <ThemeProvider>
             <SidebarProvider defaultOpen={false}>
               <Tooltip delayDuration={500}>
-                <Suspense>
-                  <Sooner />
-                  <AuthToastHandler />
-                </Suspense>
-                {children}
+                <ImageViewerProvider>
+                  <Suspense>
+                    <Sooner />
+                    <AuthToastHandler />
+                  </Suspense>
+                  {children}
+                </ImageViewerProvider>
               </Tooltip>
             </SidebarProvider>
           </ThemeProvider>

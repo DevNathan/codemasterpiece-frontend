@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import PostMarkdownRenderer from "@/shared/components/markdown/PostMarkdownRenderer";
 import {
   HeadingMeta,
@@ -12,6 +13,7 @@ import ArticleTOC from "@/features/post/ui/detail/element/ArticleTOC";
 import DraftBanner from "@/features/post/ui/detail/element/DraftBanner";
 import MobileTOC from "@/features/post/ui/detail/element/MobileTOC";
 import { slugifyId } from "@/lib/util/slugify";
+import remarkInlineFormats from "@/shared/components/markdown/remarkInlineFormats";
 
 type Props = { isPublished: boolean; mainContent: string };
 
@@ -28,9 +30,7 @@ const Content = ({ isPublished, mainContent }: Props) => {
 
 function ContentInner({ isPublished, mainContent }: Props) {
   const [headings, setHeadings] = useState<HeadingMeta[]>([]);
-  const [activeId, setActiveId] = useState<string>("");
 
-  // 문서 수명 동안만 유지되는 카운터/중복 방지 컨테이너
   const idCounts = useMemo(() => new Map<string, number>(), []);
   const seen = useMemo(() => new Set<string>(), []);
 
@@ -53,8 +53,13 @@ function ContentInner({ isPublished, mainContent }: Props) {
     [idCounts, seen],
   );
 
+  // <br> 태그만 "강제 개행" 규칙에 맞게 변환
+  // 두 공백 + 개행 = 하드 브레이크
+  const normalizedContent = useMemo(
+    () => (mainContent || "").replace(/<br\s*\/?>/gi, "  \n"),
+    [mainContent],
+  );
 
-  // Content.tsx (핵심만)
   return (
     <div className="w-full py-8 md:py-10">
       {!isPublished && <DraftBanner />}
@@ -62,19 +67,18 @@ function ContentInner({ isPublished, mainContent }: Props) {
       <MobileTOC headings={headings} />
 
       <div className="px-4 block lg:grid-cols-[minmax(0,1fr)_280px] lg:grid gap-2">
-        {/* 본문 */}
-        <div id={"post-content"}>
+        <div id="post-content">
           <HeadingProvider value={ctxValue}>
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={[remarkGfm, remarkInlineFormats]}
+              rehypePlugins={[rehypeRaw]}
               components={PostMarkdownRenderer}
             >
-              {mainContent || "_작성된 내용이 없습니다._"}
+              {normalizedContent || "_작성된 내용이 없습니다._"}
             </ReactMarkdown>
           </HeadingProvider>
         </div>
 
-        {/* 사이드 TOC (md 이상에서만 보임) */}
         <div className="hidden lg:block">
           <ArticleTOC
             headings={headings}

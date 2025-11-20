@@ -23,27 +23,51 @@ import { Kbd } from "@/shared/components/shadcn/kbd";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "next-themes";
-import {
-  Home,
-  LayoutDashboard,
-  LogOut,
-  MonitorCog,
-  Moon,
-  PenSquare,
-  Sun,
-} from "lucide-react";
+import { Home, LayoutDashboard, LogOut, PenSquare } from "lucide-react";
 import { SiGithub } from "react-icons/si";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/shared/components/shadcn/select";
+import { CodeTheme, useCodeTheme } from "@/contexts/CodeThemeProvider";
+import {
+  PointColor,
+  POINT_COLORS,
+  usePointTheme,
+} from "@/contexts/PointThemeProvider";
 
 type Props = { user: AppUser };
+
+const THEME_OPTIONS = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+] as const;
+
+const CODE_THEME_OPTIONS: { value: CodeTheme; label: string }[] = [
+  { value: "atom-one", label: "Atom One" },
+  { value: "github", label: "GitHub" },
+  { value: "stackoverflow", label: "StackOverflow" },
+];
+
+const POINT_OPTIONS: { value: PointColor; label: string }[] = [
+  { value: "amber", label: "Amber" },
+  { value: "sky", label: "Sky" },
+  { value: "purple", label: "Purple" },
+];
 
 const UserDropdown = ({ user }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { setTheme, theme, systemTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const { codeTheme, setCodeTheme } = useCodeTheme();
+  const { pointColor, setPointColor } = usePointTheme();
 
   // 컨트롤드 오픈 상태
   const [open, setOpen] = useState(false);
-
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // 현재 페이지로 복귀용 ruri
@@ -52,6 +76,12 @@ const UserDropdown = ({ user }: Props) => {
   const logoutUrl = `${process.env.NEXT_PUBLIC_API_DOMAIN}/api/v1/auth/logout`;
   const avatarUrl = `https://avatars.githubusercontent.com/u/${user.userId}?s=64`;
   const isAuthor = user.role === "AUTHOR";
+
+  // Select value용 theme 정규화
+  const currentThemeValue =
+    theme === "light" || theme === "dark" || theme === "system"
+      ? theme
+      : "system";
 
   // 단축키: Shift + U 로 메뉴 토글 (입력 중엔 무시)
   useEffect(() => {
@@ -68,8 +98,7 @@ const UserDropdown = ({ user }: Props) => {
       if (isTypingElement(e.target)) return;
       if (e.shiftKey && e.key.toLowerCase() === "u") {
         e.preventDefault();
-        setOpen((prev) => !prev); // ← click 대신 상태 토글
-        // 포커스 감각 살리기 (접근성 + 포커스링)
+        setOpen((prev) => !prev);
         triggerRef.current?.focus();
       }
     };
@@ -183,30 +212,94 @@ const UserDropdown = ({ user }: Props) => {
 
         <DropdownMenuSeparator />
 
-        {/* 테마 */}
+        {/* Appearance */}
         <div className="px-2.5 pt-2 pb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
           Appearance
         </div>
-        <DropdownMenuGroup className="px-1 pb-1">
-          <DropdownMenuItem
-            onClick={() => setTheme("light")}
-            className="px-2.5"
-          >
-            <Sun className="h-4 w-4 mr-2" />
-            Light
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("dark")} className="px-2.5">
-            <Moon className="h-4 w-4 mr-2" />
-            Dark
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setTheme("system")}
-            className="px-2.5"
-          >
-            <MonitorCog className="h-4 w-4 mr-2" />
-            System
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
+
+        <div className="px-2.5 pb-2 space-y-2">
+          {/* UI Theme */}
+          <div>
+            <div className="mb-1 text-[11px] text-muted-foreground">
+              UI Theme
+            </div>
+            <Select
+              value={currentThemeValue}
+              onValueChange={(v) => setTheme(v as "light" | "dark" | "system")}
+            >
+              <SelectTrigger
+                className="h-8 w-full px-2 py-1 text-[11px] border-muted-foreground/30
+                           bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                aria-label="UI theme"
+              >
+                <SelectValue placeholder="Theme" />
+              </SelectTrigger>
+              <SelectContent align="end" className="text-xs min-w-[150px]">
+                {THEME_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Code Theme */}
+          <div>
+            <div className="mb-1 text-[11px] text-muted-foreground">
+              Code Theme
+            </div>
+            <Select
+              value={codeTheme}
+              onValueChange={(v) => setCodeTheme(v as CodeTheme)}
+            >
+              <SelectTrigger
+                className="h-8 w-full px-2 py-1 text-[11px] border-muted-foreground/30
+                           bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                aria-label="Code highlight theme"
+              >
+                <SelectValue placeholder="Code theme" />
+              </SelectTrigger>
+              <SelectContent align="end" className="text-xs min-w-[150px]">
+                {CODE_THEME_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Point Color */}
+          <div>
+            <div className="mb-1 text-[11px] text-muted-foreground">
+              Point Color
+            </div>
+            <Select
+              value={pointColor}
+              onValueChange={(v) => {
+                if (POINT_COLORS.includes(v as PointColor)) {
+                  setPointColor(v as PointColor);
+                }
+              }}
+            >
+              <SelectTrigger
+                className="h-8 w-full px-2 py-1 text-[11px] border-muted-foreground/30
+                           bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                aria-label="Point color"
+              >
+                <SelectValue placeholder="Point color" />
+              </SelectTrigger>
+              <SelectContent align="end" className="text-xs min-w-[150px]">
+                {POINT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <DropdownMenuSeparator />
 

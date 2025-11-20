@@ -1,9 +1,8 @@
-// src/lib/constants/localstorages.ts
-
 export const LOCALS = {
   // 기존
   PREFER_C_SIZE: "prefer-comment-size",
   ANON_COMMENT: "anonymous-comment",
+  CODE_THEME: "code-theme",
 
   // 임시저장(글쓰기)
   DRAFT_NEW_POST: "draft-post-new",

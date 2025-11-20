@@ -4,11 +4,16 @@ import React, { useEffect } from "react";
 import type { Components } from "react-markdown";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/shared/components/shadcn/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/shared/components/shadcn/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/shared/components/shadcn/alert";
 import { ImageOff, Link as LinkIcon } from "lucide-react";
 import { CodeBlock } from "@/shared/components/markdown/CodeBlock";
 import { useHeadingRegistry } from "@/shared/components/markdown/HeadingContext";
 import { scrollToId } from "@/lib/scrollToId";
+import { useImageViewer } from "@/contexts/ImageViewProvider";
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 const textOf = (node: React.ReactNode): string => {
@@ -29,7 +34,7 @@ const heading =
     depth: 1 | 2 | 3 | 4 | 5 | 6,
   ) =>
   ({ children }: { children?: React.ReactNode }) => {
-    const { register, allocId,  } = useHeadingRegistry();
+    const { register, allocId } = useHeadingRegistry();
     const raw = textOf(children).trim();
     if (!raw) {
       return (
@@ -43,7 +48,7 @@ const heading =
 
     useEffect(() => {
       register({ id: finalId!, text: raw, depth });
-    }, []);
+    }, [finalId, raw, depth, register]);
 
     return (
       <Tag
@@ -86,13 +91,25 @@ function getImageTitleFromParagraph(node?: HastElement): string | undefined {
 
 /* ── renderer ─────────────────────────────────────────────────────────────── */
 const PostMarkdownRenderer: Components = {
-  /* headings */
-  h1: heading("h1", "text-3xl md:text-4xl mt-10 mb-6", 1),
-  h2: heading("h2", "text-2xl md:text-3xl mt-10 mb-5", 2),
-  h3: heading("h3", "text-xl md:text-2xl mt-8 mb-4", 3),
-  h4: heading("h4", "text-lg md:text-xl mt-6 mb-3", 4),
-  h5: heading("h5", "text-base md:text-lg mt-5 mb-2", 5),
-  h6: heading("h6", "text-sm md:text-base mt-4 mb-2 text-muted-foreground", 6),
+  /* headings: GitHub 느낌으로 h1/h2에 바텀 보더 */
+  h1: heading(
+    "h1",
+    "mt-10 mb-6 pb-3 text-3xl md:text-4xl border-b border-border break-words",
+    1,
+  ),
+  h2: heading(
+    "h2",
+    "mt-10 mb-5 pb-2 text-2xl md:text-3xl border-b border-border/60 break-words",
+    2,
+  ),
+  h3: heading("h3", "text-xl md:text-2xl mt-8 mb-4 break-words", 3),
+  h4: heading("h4", "text-lg md:text-xl mt-6 mb-3 break-words", 4),
+  h5: heading("h5", "text-base md:text-lg mt-5 mb-2 break-words", 5),
+  h6: heading(
+    "h6",
+    "text-sm md:text-base mt-4 mb-2 text-muted-foreground break-words",
+    6,
+  ),
 
   /* paragraph with image-only upgrade */
   p({ node, children, className }) {
@@ -102,7 +119,7 @@ const PostMarkdownRenderer: Components = {
         <figure className="my-4 mx-auto w-full max-w-[min(100%,900px)]">
           {children}
           {caption && (
-            <figcaption className="mt-2 text-center text-xs text-muted-foreground">
+            <figcaption className="mt-2 text-center text-xs text-muted-foreground break-words">
               {caption}
             </figcaption>
           )}
@@ -110,7 +127,12 @@ const PostMarkdownRenderer: Components = {
       );
     }
     return (
-      <p className={cn("leading-7 [&:not(:first-child)]:mt-6", className)}>
+      <p
+        className={cn(
+          "leading-7 [&:not(:first-child)]:mt-6 break-words",
+          className,
+        )}
+      >
         {children}
       </p>
     );
@@ -119,12 +141,13 @@ const PostMarkdownRenderer: Components = {
   /* links */
   a({ href = "", children, className, ...props }) {
     const isExternal = /^https?:\/\//i.test(href) || href.startsWith("//");
+
     return (
       <a
         href={href}
         {...props}
         className={cn(
-          "text-primary underline underline-offset-4 hover:opacity-90 break-words",
+          `text-point underline underline-offset-4 hover:opacity-90 break-words visited:text-point/70 transition-colors duration-200`,
           className,
         )}
         {...(isExternal ? { target: "_blank", rel: "noreferrer" } : undefined)}
@@ -176,6 +199,7 @@ const PostMarkdownRenderer: Components = {
   /* images with fallback */
   img({ src = "", alt = "", className, ...props }) {
     const [error, setError] = React.useState(false);
+    const { open } = useImageViewer();
 
     if (error || !src) {
       return (
@@ -204,8 +228,10 @@ const PostMarkdownRenderer: Components = {
         alt={alt}
         loading="lazy"
         onError={() => setError(true)}
+        onClick={() => open(src as string, alt)}
         className={cn(
           "rounded-md border bg-card my-4 mx-auto block max-w-full h-auto",
+          "cursor-zoom-in transition-transform duration-200 hover:opacity-90",
           className,
         )}
         {...props}
@@ -213,7 +239,7 @@ const PostMarkdownRenderer: Components = {
     );
   },
 
-  /* lists/table/inline/misc 그대로 ↓ */
+  /* lists */
   ul({ children, className, ...props }) {
     return (
       <ul
@@ -247,20 +273,122 @@ const PostMarkdownRenderer: Components = {
       </li>
     );
   },
+
+  /* blockquote: GitHub callout + 일반 인용 분리 */
   blockquote({ children, className }) {
+    const raw = textOf(children).trim();
+    const lines = raw.split(/\r?\n/);
+
+    const firstLine = lines[0] ?? "";
+    const m = /^\[!([a-zA-Z]+)\]\s*(.*)$/.exec(firstLine);
+
+    if (m) {
+      const kindRaw = m[1];
+      const afterTag = m[2] ?? "";
+      const kind = kindRaw.toLowerCase();
+
+      const { containerClass, labelClass, labelText } = (() => {
+        switch (kind) {
+          case "important":
+            return {
+              containerClass: "border-point/60 bg-point/5",
+              labelClass: "bg-point/15 text-point",
+              labelText: "Important",
+            };
+          case "warning":
+          case "caution":
+            return {
+              containerClass: "border-amber-500/60 bg-amber-500/10",
+              labelClass: "bg-amber-500/20 text-amber-300",
+              labelText: kind === "warning" ? "Warning" : "Caution",
+            };
+          case "danger":
+          case "error":
+            return {
+              containerClass: "border-red-500/60 bg-red-500/10",
+              labelClass: "bg-red-500/20 text-red-300",
+              labelText: "Danger",
+            };
+          case "tip":
+            return {
+              containerClass: "border-emerald-500/60 bg-emerald-500/10",
+              labelClass: "bg-emerald-500/20 text-emerald-300",
+              labelText: "Tip",
+            };
+          case "note":
+          case "info":
+            return {
+              containerClass: "border-sky-500/60 bg-sky-500/10",
+              labelClass: "bg-sky-500/20 text-sky-300",
+              labelText: kind === "note" ? "Note" : "Info",
+            };
+          default:
+            return {
+              containerClass: "border-border bg-muted/60",
+              labelClass: "bg-muted text-muted-foreground",
+              labelText: kindRaw,
+            };
+        }
+      })();
+
+      // body: 라벨 줄 제외 전부
+      const bodyLines: string[] = [];
+      if (afterTag) {
+        bodyLines.push(afterTag);
+        bodyLines.push(...lines.slice(1));
+      } else {
+        bodyLines.push(...lines.slice(1));
+      }
+      const bodyText = bodyLines.join("\n").trim();
+
+      return (
+        <Alert
+          className={cn(
+            "my-6 border px-4 pt-4 pb-3 text-sm",
+            "bg-background/80 backdrop-blur",
+            containerClass,
+            className,
+          )}
+        >
+          <AlertTitle className="text-[0.7rem] font-semibold uppercase tracking-wide">
+            <span
+              className={cn("inline-flex rounded px-1.5 py-0.5", labelClass)}
+            >
+              {labelText}
+            </span>
+          </AlertTitle>
+
+          {bodyText && (
+            <AlertDescription className="mt-2 whitespace-pre-line text-sm text-primary">
+              {bodyText}
+            </AlertDescription>
+          )}
+        </Alert>
+      );
+    }
+
+    // 일반 blockquote: Alert 안 쓰고 따로 디자인
     const content = Array.isArray(children) ? children : [children];
-    const title = content[0];
-    const rest = content.slice(1);
+
     return (
-      <Alert className={cn("my-6", className)}>
-        {title && <AlertTitle>{title}</AlertTitle>}
-        {rest.length > 0 && <AlertDescription>{rest}</AlertDescription>}
-      </Alert>
+      <div
+        className={cn(
+          "my-6 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm",
+          "relative",
+          className,
+        )}
+      >
+        <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-border/80" />
+        <div className="relative space-y-1 whitespace-pre-line">{content}</div>
+      </div>
     );
   },
+
   hr() {
     return <Separator className="my-8" />;
   },
+
+  /* table: 행 + 열 모두 라인, 열은 좀 더 옅게 */
   table({ children, className, ...props }) {
     return (
       <div className="my-6 w-full overflow-x-auto rounded-md border">
@@ -292,7 +420,10 @@ const PostMarkdownRenderer: Components = {
   },
   tr({ children, className, ...props }) {
     return (
-      <tr className={cn("border-b hover:bg-muted/30", className)} {...props}>
+      <tr
+        className={cn("border-b border-border hover:bg-muted/30", className)}
+        {...props}
+      >
         {children}
       </tr>
     );
@@ -302,6 +433,7 @@ const PostMarkdownRenderer: Components = {
       <th
         className={cn(
           "px-3 py-2 font-semibold text-foreground align-middle",
+          "border-r border-border/40",
           className,
         )}
         {...props}
@@ -312,11 +444,20 @@ const PostMarkdownRenderer: Components = {
   },
   td({ children, className, ...props }) {
     return (
-      <td className={cn("px-3 py-2 align-top", className)} {...props}>
+      <td
+        className={cn(
+          "px-3 py-2 align-top",
+          "border-r border-border/40",
+          className,
+        )}
+        {...props}
+      >
         {children}
       </td>
     );
   },
+
+  /* inline 스타일들 */
   strong({ children, className }) {
     return (
       <strong className={cn("font-semibold", className)}>{children}</strong>
@@ -325,6 +466,56 @@ const PostMarkdownRenderer: Components = {
   em({ children, className }) {
     return <em className={cn("italic", className)}>{children}</em>;
   },
+
+  /* <sub>, <sup> 처리 */
+  sub({ children, className, ...props }) {
+    return (
+      <sub
+        className={cn(
+          "align-baseline text-[0.7em] translate-y-[0.1em]",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </sub>
+    );
+  },
+  sup({ children, className, ...props }) {
+    return (
+      <sup className={cn("align-super text-[0.7em]", className)} {...props}>
+        {children}
+      </sup>
+    );
+  },
+
+  /* ++밑줄++ → <u> */
+  u({ children, className, ...props }) {
+    return (
+      <span
+        className={cn(
+          "underline underline-offset-4 decoration-muted-foreground/70",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </span>
+    );
+  },
+
+  /* ==하이라이트== → <mark>, text-point 고정 */
+  mark({ children, className, ...props }) {
+    return (
+      <mark
+        className={cn("rounded px-1 bg-point/10 text-point", className)}
+        {...props}
+      >
+        {children}
+      </mark>
+    );
+  },
+
   kbd({ children, className, ...props }) {
     return (
       <kbd

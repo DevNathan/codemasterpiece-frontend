@@ -1,4 +1,3 @@
-// useViewOnVisible.ts
 "use client";
 
 import { RefObject, useEffect, useRef } from "react";
@@ -11,17 +10,20 @@ type Opts = {
   queryKey: QueryKey;
   threshold?: number;
   resync?: "none" | "background";
+  enabled: boolean
 };
 
 /** target 엘리먼트가 보이면 조회수 증가 + 캐시 반영 (+선택적 백그라운드 동기화) */
 export function useViewOnVisible<E extends Element = HTMLElement>(
   targetRef: RefObject<E | null>,
-  { postId, queryKey, threshold = 0.25, resync = "none" }: Opts,
+  { postId, queryKey, threshold = 0.25, resync = "none", enabled }: Opts,
 ) {
   const qc = useQueryClient();
   const firedRef = useRef(false);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const el = targetRef.current;
     if (!el || !postId) return;
 
@@ -35,6 +37,7 @@ export function useViewOnVisible<E extends Element = HTMLElement>(
         firedRef.current = true;
 
         try {
+          console.log("안녕");
           const res = await increaseViewCount(postId);
           const counted = res.data?.counted === true;
           const serverCount = res.data?.viewCount;
@@ -59,5 +62,5 @@ export function useViewOnVisible<E extends Element = HTMLElement>(
 
     io.observe(el);
     return () => io.disconnect();
-  }, [postId, queryKey, threshold, resync, qc, targetRef]);
+  }, [enabled]);
 }
