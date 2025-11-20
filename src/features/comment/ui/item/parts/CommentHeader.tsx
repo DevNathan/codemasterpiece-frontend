@@ -3,8 +3,14 @@
 import { Badge } from "@/shared/components/shadcn/badge";
 import { EyeOff, Trash } from "lucide-react";
 import React from "react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/shadcn/avatar";
 
 type Props = {
+  profileImage: string;
   nickname: string;
   timeText: string;
   deleted: boolean;
@@ -12,6 +18,7 @@ type Props = {
 };
 
 export default function CommentHeader({
+  profileImage,
   nickname,
   timeText,
   deleted,
@@ -19,6 +26,12 @@ export default function CommentHeader({
 }: Props) {
   return (
     <div className="flex justify-between items-center">
+      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 self-start">
+        <AvatarImage src={profileImage} alt={nickname} />
+        <AvatarFallback className="text-[11px] font-semibold">
+          {nickname.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
       <h5 className="font-semibold text-sm sm:text-base">{nickname}</h5>
       <div className="flex flex-wrap items-center gap-1.5">
         {deleted && (

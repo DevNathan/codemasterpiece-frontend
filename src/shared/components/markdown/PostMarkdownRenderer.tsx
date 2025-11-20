@@ -64,7 +64,7 @@ const heading =
           }}
           className="inline-flex items-center gap-2 no-underline hover:underline decoration-dotted underline-offset-4"
         >
-          <span>{children}</span>
+          <span className={"break-all"}>{children}</span>
           <LinkIcon className="size-4 opacity-0 transition-opacity group-hover:opacity-60" />
         </button>
       </Tag>
@@ -94,20 +94,20 @@ const PostMarkdownRenderer: Components = {
   /* headings: GitHub 느낌으로 h1/h2에 바텀 보더 */
   h1: heading(
     "h1",
-    "mt-10 mb-6 pb-3 text-3xl md:text-4xl border-b border-border break-words",
+    "mt-10 mb-6 pb-3 text-3xl md:text-4xl border-b border-border",
     1,
   ),
   h2: heading(
     "h2",
-    "mt-10 mb-5 pb-2 text-2xl md:text-3xl border-b border-border/60 break-words",
+    "mt-10 mb-5 pb-2 text-2xl md:text-3xl border-b border-border/60",
     2,
   ),
-  h3: heading("h3", "text-xl md:text-2xl mt-8 mb-4 break-words", 3),
-  h4: heading("h4", "text-lg md:text-xl mt-6 mb-3 break-words", 4),
-  h5: heading("h5", "text-base md:text-lg mt-5 mb-2 break-words", 5),
+  h3: heading("h3", "text-xl md:text-2xl mt-8 mb-4", 3),
+  h4: heading("h4", "text-lg md:text-xl mt-6 mb-3", 4),
+  h5: heading("h5", "text-base md:text-lg mt-5 mb-2", 5),
   h6: heading(
     "h6",
-    "text-sm md:text-base mt-4 mb-2 text-muted-foreground break-words",
+    "text-sm md:text-base mt-4 mb-2 text-muted-foreground",
     6,
   ),
 
@@ -175,7 +175,7 @@ const PostMarkdownRenderer: Components = {
       return (
         <code
           className={cn(
-            "rounded bg-muted px-1 py-0.5 font-mono text-sm",
+            "rounded bg-muted px-1 py-0.5 font-mono text-sm break-words",
             className,
           )}
         >

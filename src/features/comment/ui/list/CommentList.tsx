@@ -32,7 +32,7 @@ const CommentList = () => {
   );
 
   return (
-    <div className="px-3 py-2 my-10 space-y-6">
+    <div className="px-0 py-2 my-10 space-y-6 sm:px-3">
       {/* 상단 컨트롤바 */}
       <ControlsBar
         left={<SizeSelector value={size} onChange={handleChangeSize} />}
@@ -62,7 +62,7 @@ const CommentList = () => {
         }
       >
         {() => (
-          <div className="rounded-2xl border bg-card/70 backdrop-blur p-3 sm:p-4">
+          <div className="rounded-2xl border bg-card/70 backdrop-blur p-1 sm:p-4">
             <div className="h-1 w-full bg-gradient-to-r from-point/20 via-point/60 to-point/20 rounded-md mb-4" />
             <RootList items={roots} />
             <PageSelector

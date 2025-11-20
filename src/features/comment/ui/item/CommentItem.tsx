@@ -69,100 +69,100 @@ export default function CommentItem({ comment }: Props) {
     <li className="block w-full box-border">
       <div
         className={cn(
-          "flex gap-3 sm:gap-4 items-stretch bg-sidebar rounded-xl px-4 py-3 sm:px-5 sm:py-4 shadow-sm w-full border-border border-b",
+          "flex gap-3 sm:gap-4 items-stretch bg-sidebar rounded-xl px-3 py-3 sm:px-5 sm:py-4 shadow-sm w-full border-border border-b",
           {
-            "ml-4": indentDepth > 0,
+            "ml-3 sm:ml-4": indentDepth > 0,
             "pl-2 sm:pl-4": indentDepth === 1,
-            "pl-4 sm:pl-6": indentDepth === 2,
+            "pl-3 sm:pl-6": indentDepth === 2,
           },
         )}
       >
+        {/* 좌측 리액션 바 (모바일에서도 최소 폭만 차지) */}
         <ReactionBar
           commentId={commentId}
           score={reaction}
           myReaction={myReaction}
         />
 
-        {/* 아바타 */}
-        <Avatar className="w-12 h-12 sm:w-14 sm:h-14 shrink-0">
-          <AvatarImage src={profileImage} alt={nickname} />
-          <AvatarFallback className="text-[11px] font-semibold">
-            {nickname.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-
-        {/* 본문 */}
-        <div className="flex flex-col justify-center h-full flex-1">
-          <CommentHeader
-            nickname={nickname}
-            timeText={getTimeGapFromNow(
-              new Date(createdAt),
-              formatToYearMonthDay,
-            )}
-            deleted={deleted}
-            hidden={hidden}
-          />
-
-          {/* 콘텐츠 or 수정 폼 — 내부에서 자체 상태 관리 */}
-          {!isEditing ? (
-            <CommentContent
-              content={content}
-              className={cn(
-                "prose prose-sm sm:prose-base max-w-none mt-1 transition-colors",
-                deleted && "text-muted-foreground",
-                !deleted && hidden && "text-muted-foreground",
+        {/* 아바타 + 본문 래퍼
+            - 모바일: flex-col → 아바타가 위, 본문이 아래로 떨어져서 텍스트 폭 확보
+            - sm 이상: flex-row → 기존 데스크탑 느낌 유지
+        */}
+        <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:gap-3">
+          {/* 본문 */}
+          <div className="flex flex-col justify-center h-full flex-1 min-w-0">
+            <CommentHeader
+              profileImage={profileImage}
+              nickname={nickname}
+              timeText={getTimeGapFromNow(
+                new Date(createdAt),
+                formatToYearMonthDay,
               )}
+              deleted={deleted}
+              hidden={hidden}
             />
-          ) : (
-            <CommentEditForm
-              commentId={commentId}
-              actorId={actorId}
-              initialContent={content}
-              anon={anon}
-              needPassword={needPassword}
-              onCloseAction={() => setEditing(false)}
-              className="mt-2"
-            />
-          )}
 
-          {!deleted && (
-            <div className="flex items-center justify-end gap-1.5 sm:gap-2 mt-2">
-              {isAuthorRole && (
-                <HideToggleButton commentId={commentId} hidden={hidden} />
-              )}
-
-              {modifiable && (
-                <>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 sm:w-9 sm:h-9 p-0 rounded-full hover:bg-accent"
-                        aria-label="댓글 수정"
-                        onClick={() => setEditing(true)}
-                      >
-                        <Pencil width={18} height={18} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" align="center">
-                      댓글 수정
-                    </TooltipContent>
-                  </Tooltip>
-
-                  <DeleteConfirmDialog
-                    commentId={commentId}
-                    needPassword={needPassword}
-                  />
-                </>
-              )}
-
-              <ReplyButtonWithDropdown
-                nickname={nickname}
-                parentId={commentId}
+            {/* 콘텐츠 or 수정 폼 — 내부에서 자체 상태 관리 */}
+            {!isEditing ? (
+              <CommentContent
+                content={content}
+                className={cn(
+                  "prose prose-sm sm:prose-base max-w-none mt-1 transition-colors break-words",
+                  deleted && "text-muted-foreground",
+                  !deleted && hidden && "text-muted-foreground",
+                )}
               />
-            </div>
-          )}
+            ) : (
+              <CommentEditForm
+                commentId={commentId}
+                actorId={actorId}
+                initialContent={content}
+                anon={anon}
+                needPassword={needPassword}
+                onCloseAction={() => setEditing(false)}
+                className="mt-2"
+              />
+            )}
+
+            {!deleted && (
+              <div className="flex items-center justify-end gap-1.5 sm:gap-2 mt-2">
+                {isAuthorRole && (
+                  <HideToggleButton commentId={commentId} hidden={hidden} />
+                )}
+
+                {modifiable && (
+                  <>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 sm:w-9 sm:h-9 p-0 rounded-full hover:bg-accent"
+                          aria-label="댓글 수정"
+                          onClick={() => setEditing(true)}
+                        >
+                          <Pencil width={18} height={18} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" align="center">
+                        댓글 수정
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <DeleteConfirmDialog
+                      commentId={commentId}
+                      needPassword={needPassword}
+                    />
+                  </>
+                )}
+
+                <ReplyButtonWithDropdown
+                  nickname={nickname}
+                  parentId={commentId}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
