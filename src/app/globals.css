@@ -40,6 +40,9 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
+
+    --font-sans: var(--font-noto-sans-kr), var(--font-roboto), sans-serif;
+    --font-abril: var(--font-abril-fatface), var(--font-noto-sans-kr), sans-serif;
 }
 
 :root {
@@ -118,39 +121,9 @@
     --chart-sessions: color-mix(in oklch, hsl(var(--point)) 55%, oklch(0.72 0.20 30));
 }
 
-@font-face {
-    font-family: 'Noto Sans KR';
-    src: url('/fonts/NotoSansKR-Regular.woff2') format('woff2');
-    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Roboto';
-    src: url('/fonts/Roboto-Medium.woff2') format('woff2');
-    unicode-range: U+0030-0039, U+0041-005A, U+0061-007A;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Abril Fatface';
-    src: url('/fonts/AbrilFatface-Regular.woff2') format('woff2');
-    font-display: swap;
-}
-
-@utility font-abril {
-    font-family: 'Abril Fatface', 'Noto Sans KR', 'Roboto', sans-serif;
-    font-weight: 400;
-    letter-spacing: 0.01em; /* 선택사항: 디스플레이용 살짝 타이트하게 */
-}
-
 @layer base {
     * {
         @apply border-border outline-ring/50;
-    }
-
-    html {
-        font-family: 'Noto Sans KR', 'Roboto', sans-serif;
     }
 
     body {

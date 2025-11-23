@@ -22,6 +22,7 @@ const INTERNAL_SKIP = [
   /^\/favicon\.ico$/,
   /^\/robots\.txt$/,
   /^\/sitemap\.xml$/,
+  /^\/site\.webmanifest$/,
   /^\/images\//,
   /^\/fonts\//,
 ];

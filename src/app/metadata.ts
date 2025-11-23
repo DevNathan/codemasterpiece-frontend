@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 
 export const siteMetadata: Metadata = {
   title: {
-    default: "CodeMasterpiece",
-    template: "%s | CodeMasterpiece",
+    default: "Code Masterpiece",
+    template: "%s | Code Masterpiece",
   },
   description:
     "개발과 디자인, 두 세계를 잇는 공간. 코드로 예술을 만들고, 생각을 기록하는 블로그입니다.",
   authors: [{ name: "DevNathan", url: "https://github.com/DevNathan" }],
   keywords: [
-    "CodeMasterpiece",
+    "Code Masterpiece",
     "코드마스터피스",
     "웹개발",
     "디자인",
@@ -21,7 +21,7 @@ export const siteMetadata: Metadata = {
     "Spring Boot",
   ],
   creator: "DevNathan",
-  publisher: "CodeMasterpiece",
+  publisher: "Code Masterpiece",
   metadataBase: new URL("https://www.codemasterpiece.com"),
   alternates: {
     canonical: "https://www.codemasterpiece.com",
@@ -40,7 +40,7 @@ export const siteMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CodeMasterpiece",
+    title: "Code Masterpiece",
     description:
       "코드로 예술을 만들고, 생각을 기록하는 공간. 개발자 DevNathan의 기술 블로그.",
     site: "@DevNathan",

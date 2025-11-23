@@ -12,7 +12,7 @@ import { actorFrom, postKeys, type ActorKey } from "@/features/post/queries/keys
 import PostDetailView from "@/features/post/ui/detail/PostDetailView";
 
 const SITE_URL = "https://codemasterpiece.com";
-const SITE_NAME = "CodeMasterpiece";
+const SITE_NAME = "Code Masterpiece";
 const SITE_LOCALE = "ko_KR";
 const AUTHOR = "DevNathan";
 

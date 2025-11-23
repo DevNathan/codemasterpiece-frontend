@@ -31,7 +31,9 @@ export function HeroTitle() {
 
   return (
     <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight drop-shadow-[0_0_15px_rgba(0,0,0,0.25)]">
-      <span className="text-point-gradient font-abril">{text}</span>
+      <span className="text-point-gradient font-abril tracking-normal">
+        {text}
+      </span>
       {/* 캐럿 */}
       <span
         aria-hidden
