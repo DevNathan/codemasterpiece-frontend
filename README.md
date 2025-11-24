@@ -17,6 +17,7 @@
 1. 개발 주안점
 2. 프론트엔드 엔지니어링 표준
 3. 테크 스택
+4. 트러블슈팅
 
 ## 1. 개발 주안점
 
@@ -166,16 +167,64 @@ Backend(Spring Boot)와 Frontend(Next.js) 간의 통신 안정성을 보장하�
 
 <br>
 
-## 4. 트러블슈팅 및 성능 최적화 사례
+## 4. 트러블슈팅 사례
 
 ### 1) API 통신 계층의 파편화 해결과 미들웨어 런타임 제약 극복
-* **문제 상황 (Boilerplate Hell)**: 
-  Next.js의 기본 `fetch`는 강력하지만, 실제 운영 환경에서는 네트워크 에러 처리(`try-catch`), 응답 상태 코드 확인(`!res.ok`), 공통 응답 규격 파싱(`ApiResult`) 등의 보일러플레이트 코드가 매 요청마다 반복되는 비효율이 발생했습니다.
-* **해결 과정 (Abstraction)**:
-  * **Fetch Wrapper 설계**: `serverFetch`와 `clientFetch`를 구현하여 반복되는 에러 핸들링 로직을 중앙화했습니다.
-  * **Zod 통합**: 요청 시 `dataSchema`를 주입받아, 성공 응답뿐만 아니라 에러 응답까지 런타임에 검증하도록 하여 '예측 가능한 통신 계층'을 구축했습니다. * **직면한 난관 (Middleware Constraint)**: 
-  * API Proxy 역할을 하는 미들웨어(Middleware)에서 `serverFetch`를 재사용하려 했으나, **"Cookies can only be modified in a Server Action or Route Handler"** 류의 런타임 에러가 발생했습니다.
-  * 원인 분석 결과, `next/headers`의 `cookies()` 함수는 Server Component 컨텍스트에 의존하므로, Edge Runtime 기반의 미들웨어에서는 동작 방식이 다르거나 제한적이었습니다.
-* **최종 해결 (Static Fetch)**:
-  * 미들웨어 및 SSG(Static Site Generation)와 같이 사용자 세션(Cookie)이 없거나 필요 없는 환경을 위해 **`staticServerFetch`**를 분리 구현했습니다.
-  * 불필요한 헤더 의존성을 제거하고 `AbortController` 기반의 타임아웃 처리를 추가하여, 런타임 환경에 구애받지 않는 순수한 서버 사이드 요청 유틸리티를 확보했습니다.
+
+* **문제 상황 (Boilerplate Hell)**
+  > Next.js의 기본 `fetch`는 강력하지만, 실제 운영 환경에서는 네트워크 에러 처리(`try-catch`), 응답 상태 코드 확인(`!res.ok`), 공통 응답 규격 파싱(`ApiResult`) 등의 보일러플레이트 코드가 매 요청마다 반복되는 비효율이 발생했습니다.
+
+* **해결 과정 (Abstraction & Type Safety)**
+  > **Fetch Wrapper 설계**: `serverFetch`와 `clientFetch`를 구현하여 반복되는 에러 핸들링 로직을 중앙화하고, 환경별(Server/Client) 제약 사항을 캡슐화했습니다.
+  > **Zod 통합**: 요청 시 `dataSchema`를 주입받아, 성공 응답뿐만 아니라 에러 응답까지 런타임에 검증하도록 하여 **'예측 가능한 통신 계층'**을 구축했습니다.
+
+* **기술적 난관 (Edge Runtime Constraint)**
+  > API Proxy 역할을 하는 미들웨어(Middleware)에서 `serverFetch`를 재사용하려 했으나 런타임 에러가 발생했습니다. 원인 분석 결과, `next/headers`의 `cookies()` 함수는 Node.js 기반의 Server Component 컨텍스트에 의존하므로, **Edge Runtime** 기반의 미들웨어에서는 사용할 수 없었습니다.
+
+* **최종 해결 (Static Fetch Separation)**
+  > 미들웨어 및 SSG(Static Site Generation)와 같이 사용자 세션(Cookie)이 없거나 필요 없는 환경을 위해 **`staticServerFetch`**를 분리 구현했습니다. 불필요한 헤더 의존성을 제거하고 `AbortController` 기반의 타임아웃 처리를 추가하여, 런타임 환경에 구애받지 않는 순수한 서버 사이드 요청 유틸리티를 확보했습니다.
+
+### 2) 복잡한 비동기 상태 관리의 응집도 향상과 트레이드오프 분석
+
+* **문제 상황 (Props Drilling & Scattered Logic)**
+  > 대댓글(Nested Reply), 페이지네이션, 좋아요, 숨김 처리 등 복잡한 기능이 얽힌 '댓글 시스템'을 구현하면서, 관련 로직이 여러 컴포넌트에 산재되어 유지보수가 어렵고 심각한 Props Drilling이 발생했습니다.
+
+* **해결 과정 (Context as a Controller)**
+  > **Logic Colocation**: `CommentContext`를 도입하여 UI 렌더링을 제외한 모든 비즈니스 로직(데이터 페칭, Mutation, 캐시 업데이트)을 한곳으로 응집시켰습니다.
+  > **Optimistic Updates**: 사용자 경험(UX)을 위해 `React Query`의 캐시를 직접 조작하여, 서버 응답을 기다리지 않고 UI를 즉시 갱신(좋아요/삭제 등)하는 낙관적 업데이트 패턴을 적용했습니다.
+
+* **기술적 성찰 (Retrospective)**
+  > **성과**: 복잡한 상태 관리 로직을 캡슐화함으로써 하위 컴포넌트(`CommentList`, `CommentItem`)는 렌더링에만 집중할 수 있는 순수성을 확보했습니다.
+  > **한계 및 개선점**: 모든 로직을 Context에 몰아넣다 보니 파일 크기가 커지고 책임이 과중되는(God Object) 경향이 있었습니다. 향후에는 낙관적 업데이트 로직을 별도의 커스텀 훅(`useOptimisticMutation`)으로 분리하여 Context의 부하를 줄이고 관심사를 더 세밀하게 분리할 계획입니다.
+  
+<br>
+
+## 5. 설치 및 실행 가이드 (Getting Started)
+
+이 프로젝트는 **Node.js 25.x** 및 **pnpm** 환경을 권장합니다.
+
+### 로컬 개발 환경 (Manual)
+
+1.  **Repository Clone**
+    ```bash
+    git clone [https://github.com/DevNathan/codemasterpiece-front.git](https://github.com/DevNathan/codemasterpiece-front.git)
+    cd codemasterpiece-front
+    ```
+
+2.  **Install Dependencies**
+    엄격한 의존성 관리를 위해 `pnpm`을 사용합니다.
+    ```bash
+    pnpm install
+    ```
+
+3.  **Environment Setup**
+    `.env.example` 파일을 복사하여 `.env.local`을 생성하고, API 엔드포인트 등 필수 환경변수를 설정합니다.
+    ```bash
+    cp .env.schema .env.local
+    ```
+
+4.  **Run Development Server**
+    Turbopack을 사용하여 고속 개발 서버를 실행합니다.
+    ```bash
+    next dev
+    ```
