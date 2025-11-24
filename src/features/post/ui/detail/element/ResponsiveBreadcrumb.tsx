@@ -22,7 +22,7 @@ export default function ResponsiveBreadcrumb({ title, categoryName, categoryLink
         <BreadcrumbList className="flex items-center gap-1 sm:gap-2 md:gap-3">
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/public">Home</Link>
+              <Link href="/">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

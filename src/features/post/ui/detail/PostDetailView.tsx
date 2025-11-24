@@ -38,6 +38,7 @@ import { useAuth } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import deletePost from "@/features/post/api/deletePost";
 import DeletePostButton from "@/features/post/ui/detail/element/DeletePostButton";
+import MoreContentSection from "@/features/post/ui/detail/element/MoreContentSection";
 
 type Props = { slug: string; actor: ActorKey };
 
@@ -112,6 +113,7 @@ export default function PostDetailView({ slug, actor }: Props) {
     tags,
     mainContent,
     updatedAt,
+    morePosts,
   } = data;
 
   return (
@@ -169,6 +171,8 @@ export default function PostDetailView({ slug, actor }: Props) {
 
           <CommentSection postId={postId} />
         </div>
+
+        {morePosts.length > 0 && <MoreContentSection morePosts={morePosts} />}
       </div>
 
       {/* 삭제 확인 다이얼로그 */}

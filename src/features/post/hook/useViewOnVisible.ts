@@ -37,7 +37,6 @@ export function useViewOnVisible<E extends Element = HTMLElement>(
         firedRef.current = true;
 
         try {
-          console.log("안녕");
           const res = await increaseViewCount(postId);
           const counted = res.data?.counted === true;
           const serverCount = res.data?.viewCount;

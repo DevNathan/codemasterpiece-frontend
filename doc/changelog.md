@@ -3,6 +3,18 @@
 ## [Unreleased]
 - 게시글 퀴즈 추가하기
 
+## [1.0.6] - 2025-11-24
+### Added
+- **기능 추가**: 게시글 상세 페이지 하단에 현재 글과 동일한 카테고리의 인접 게시글(이전/다음 각 2개)을 탐색할 수 있는 `MorePosts` 섹션 추가
+
+### Changed
+- **UI 개선**: 게시글 목록의 `GridCard` 컴포넌트 구조를 전면 리팩토링하여, 3D 틸트 인터랙션 시 발생하던 테두리 깨짐(Aliasing) 및 레이어 겹침(Anomaly) 현상 해결
+- **스타일 수정**: `globals.css`에 누락되었던 스크롤바 관련 CSS 변수(`--scroll-thumb`, `--scroll-track`)를 추가하여 테마(Dark/Light)별 스크롤바 색상 정상화
+
+### Fixed
+- **라우팅 오류 수정**: `ResponsiveBreadcrumb` 컴포넌트의 홈 링크가 `/public`으로 잘못 설정되어 발생하던 404 에러 및 RSC 요청 실패 현상 수정
+- **코드 정리**: `useViewOnVisible` 훅 내부에 실수로 남아있던 디버깅용 `console.log` 코드 제거
+
 ## [1.0.5] - 2025-11-23
 ### Added
 - PWA 지원 및 앱 설치 경험 개선을 위한 웹 앱 매니페스트(`site.webmanifest`) 추가

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "@/app/globals.css";
 import React, { Suspense } from "react";
 import Providers from "@/app/providers";
 import { siteMetadata } from "@/app/metadata";
