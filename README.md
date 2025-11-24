@@ -33,6 +33,46 @@
   > **Frontend (Next.js)**는 사용자 경험(UX)과 뷰(View) 렌더링에 집중하고, **Backend (Spring Boot)**는 복잡한 비즈니스 로직 처리, 트랜잭션 관리, 데이터 무결성 보장에 집중하도록 설계했습니다.
   > 이를 통해 각 계층이 독립적으로 발전할 수 있는 구조를 확립하고, 디버깅 및 유지보수의 효율성을 극대화했습니다.
   
+```bash
+tree
+├── doc/                        # 개발 프로세스 및 기획 문서 (MoSCoW, Convention)
+├── public/                     # 정적 에셋 (Images)
+├── src/
+│   ├── app/                    # Next.js 16 App Router (Routing & Layouts)
+│   │   ├── (main)/             # 메인 레이아웃 그룹
+│   │   ├── (post)/             # 게시글 상세 관련 라우트
+│   │   └── api/                # Next.js Route Handlers
+│   │
+│   ├── features/               # ⭐️ Feature-First Architecture (Domain Logic)
+│   │   ├── post/               # [Example] 게시글 도메인 (모든 로직 응집)
+│   │   │   ├── api/            # - Server Actions & API Fetchers
+│   │   │   ├── hook/           # - 도메인 전용 Hooks (usePost, useViewOnVisible)
+│   │   │   ├── queries/        # - TanStack Query Keys & Options
+│   │   │   ├── schemas/        # - Zod Schemas (DTO Validation)
+│   │   │   └── ui/             # - 도메인 종속 컴포넌트 (WriterForm, DetailView)
+│   │   ├── auth/               # 인증 도메인
+│   │   ├── comment/            # 댓글 도메인
+│   │   └── analytics/          # 통계 도메인
+│   │
+│   ├── shared/                 # Cross-Cutting Concerns (공통 모듈)
+│   │   ├── components/
+│   │   │   ├── markdown/       # - 커스텀 마크다운 렌더러 (CodeBlock, Heading)
+│   │   │   └── shadcn/         # - 디자인 시스템 (Radix UI + Tailwind)
+│   │   └── module/             # - 공유 모듈
+│   │
+│   ├── lib/                    # Configuration & Utilities
+│   │   ├── api/                # ⭐️ 커스텀 fetch 기능 (Type-Safe)
+│   │   │   ├── clientFetch.ts  # - Client-side Fetch (w/ 리액트 훅 폼 확장)
+│   │   │   └── serverFetch.ts  # - Server-side Fetch (w/ 쿠키 포워딩 기능)
+│   │   └── constants/          # - 환경 상수 값
+│   │
+│   └── contexts/               # Global Contexts (Theme, Auth, QueryClient)
+│
+├── next.config.ts              # Next.js Config
+├── package.json                # Dependencies (React 19, Next 16, Tailwind 4)
+└── tsconfig.json               # TypeScript Config
+```
+  
 ### 2) 예측 가능한 데이터 흐름과 견고한 코드 품질
 TypeScript의 정적 타이핑에만 의존하지 않고, 런타임 단계의 안정성까지 확보하는 **방어적 프로그래밍**을 지향했습니다. 또한, 자동화 도구를 통해 코드 품질을 상시 모니터링합니다.
 
