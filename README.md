@@ -16,6 +16,7 @@
 
 1. 개발 주안점
 2. 프론트엔드 엔지니어링 표준
+3. 테크 스택
 
 ## 1. 개발 주안점
 
@@ -150,3 +151,31 @@ Backend(Spring Boot)와 Frontend(Next.js) 간의 통신 안정성을 보장하�
 - **Compound Component Pattern**
   > 재사용성이 높은 컴포넌트는 부모-자식 관계의 합성 컴포넌트(`Dialog.Root`, `Trigger`, `Content`)로 구현하여, 사용하는 개발자가 상황에 맞춰 레이아웃을 자유롭게 조합할 수 있는 유연성을 확보했습니다.
   
+<br>
+
+## 3. 테크 스택
+
+| 분류 (Category) | 사용 기술 (Technologies) |
+| :--- | :--- |
+| **IDE** | [![Intellij](https://img.shields.io/badge/IntelliJ_IDEA-000000?style=for-the-badge&logo=intellij-idea&logoColor=white)](https://www.jetbrains.com/idea) |
+| **Language** | [![TypeScript](https://img.shields.io/badge/TypeScript_5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) |
+| **Framework** | [![Next.js](https://img.shields.io/badge/Next.js_16_(Canary)-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/) [![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/) |
+| **Styling & UI** | [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/) [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=for-the-badge&logo=radix-ui&logoColor=white)](https://www.radix-ui.com/) [![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/) [![Lucide](https://img.shields.io/badge/Lucide_Icons-F05032?style=for-the-badge&logo=lucide&logoColor=white)](https://lucide.dev/) |
+| **State & Logic** | [![TanStack Query](https://img.shields.io/badge/TanStack_Query_v5-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/query) [![Zod](https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white)](https://zod.dev/) [![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?style=for-the-badge&logo=reacthookform&logoColor=white)](https://react-hook-form.com/) |
+| **Tooling** | [![pnpm](https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white)](https://pnpm.io/) [![Turbopack](https://img.shields.io/badge/Turbopack-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://turbo.build/) [![Knip](https://img.shields.io/badge/Knip-F7B93E?style=for-the-badge&logo=knip&logoColor=white)](https://knip.dev/) |
+
+<br>
+
+## 4. 트러블슈팅 및 성능 최적화 사례
+
+### 1) API 통신 계층의 파편화 해결과 미들웨어 런타임 제약 극복
+* **문제 상황 (Boilerplate Hell)**: 
+  Next.js의 기본 `fetch`는 강력하지만, 실제 운영 환경에서는 네트워크 에러 처리(`try-catch`), 응답 상태 코드 확인(`!res.ok`), 공통 응답 규격 파싱(`ApiResult`) 등의 보일러플레이트 코드가 매 요청마다 반복되는 비효율이 발생했습니다.
+* **해결 과정 (Abstraction)**:
+  * **Fetch Wrapper 설계**: `serverFetch`와 `clientFetch`를 구현하여 반복되는 에러 핸들링 로직을 중앙화했습니다.
+  * **Zod 통합**: 요청 시 `dataSchema`를 주입받아, 성공 응답뿐만 아니라 에러 응답까지 런타임에 검증하도록 하여 '예측 가능한 통신 계층'을 구축했습니다. * **직면한 난관 (Middleware Constraint)**: 
+  * API Proxy 역할을 하는 미들웨어(Middleware)에서 `serverFetch`를 재사용하려 했으나, **"Cookies can only be modified in a Server Action or Route Handler"** 류의 런타임 에러가 발생했습니다.
+  * 원인 분석 결과, `next/headers`의 `cookies()` 함수는 Server Component 컨텍스트에 의존하므로, Edge Runtime 기반의 미들웨어에서는 동작 방식이 다르거나 제한적이었습니다.
+* **최종 해결 (Static Fetch)**:
+  * 미들웨어 및 SSG(Static Site Generation)와 같이 사용자 세션(Cookie)이 없거나 필요 없는 환경을 위해 **`staticServerFetch`**를 분리 구현했습니다.
+  * 불필요한 헤더 의존성을 제거하고 `AbortController` 기반의 타임아웃 처리를 추가하여, 런타임 환경에 구애받지 않는 순수한 서버 사이드 요청 유틸리티를 확보했습니다.
