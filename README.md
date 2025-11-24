@@ -218,7 +218,7 @@ Backend(Spring Boot)와 Frontend(Next.js) 간의 통신 안정성을 보장하�
     ```
 
 3.  **Environment Setup**
-    `.env.example` 파일을 복사하여 `.env.local`을 생성하고, API 엔드포인트 등 필수 환경변수를 설정합니다.
+    `.env.schema` 파일을 복사하여 `.env.local`을 생성하고, API 엔드포인트 등 필수 환경변수를 설정합니다.
     ```bash
     cp .env.schema .env.local
     ```
