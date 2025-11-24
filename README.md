@@ -6,9 +6,11 @@
 
 > 최신 웹 기술의 한계를 실험하고, 극한의 사용자 경험(UX)과 개발자 경험(DX)을 동시에 추구한 CMS 기반 블로그 플랫폼입니다.
 
-🔗 **블로그:** [https://codemasterpiece.com](https://www.codemasterpiece.com)
+🔗 [Code Masterpiece](https://www.codemasterpiece.com)
 
-🔗 **Backend Repo:** [https://github.com/DevNathan/codemasterpiece-backend](https://github.com/DevNathan/codemasterpiece-backend)
+🔗 [Backend Repo](https://github.com/DevNathan/codemasterpiece-backend)
+
+🔗 [ChangeLog](https://github.com/DevNathan/codemasterpiece-frontend/blob/master/doc/changelog.md)
 
 ---
 
@@ -18,6 +20,7 @@
 2. 프론트엔드 엔지니어링 표준
 3. 테크 스택
 4. 트러블슈팅
+5. 설치 및 실행 가이드 (Getting Started)
 
 ## 1. 개발 주안점
 
