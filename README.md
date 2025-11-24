@@ -97,6 +97,16 @@ TypeScript의 정적 타이핑에만 의존하지 않고, 런타임 단계의 �
 
 <br>
 
+> **Performance Metrics (Lighthouse)**
+>
+> <img width="420" alt="Lighthouse Score" src="https://github.com/user-attachments/assets/ad982e98-be36-4b57-8931-821b783e7c3c" />
+>
+> * **SEO (91)**: 시맨틱 태그 활용, JSON-LD 구조화 데이터 적용으로 검색 엔진 친화적 구조 확립.
+> * **Best Practices (96)**: HTTPS, 보안 표준 준수, 최신 이미지 포맷(WebP) 활용.
+> * **Performance (84)**: 고화질 3D 인터랙션이 포함된 상세 페이지임에도 준수한 성능 유지.
+
+<br>
+
 ## 2. 프론트엔드 엔지니어링 표준
 
 안정적인 아키텍처 위에서, 최적의 사용자 경험(UX)과 개발자 경험(DX)을 동시에 충족시키기 위해 다음과 같은 **프론트엔드 엔지니어링 원칙**을 적용했습니다.
