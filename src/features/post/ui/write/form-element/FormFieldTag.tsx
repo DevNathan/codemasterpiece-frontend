@@ -15,7 +15,7 @@ import { Badge } from "@/shared/components/shadcn/badge";
 import { Tag as TagIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const MAX_TAGS = 6;
+const MAX_TAGS = 20;
 const MIN_LEN = 1;
 const MAX_LEN = 20;
 

@@ -105,11 +105,7 @@ const PostMarkdownRenderer: Components = {
   h3: heading("h3", "text-xl md:text-2xl mt-8 mb-4", 3),
   h4: heading("h4", "text-lg md:text-xl mt-6 mb-3", 4),
   h5: heading("h5", "text-base md:text-lg mt-5 mb-2", 5),
-  h6: heading(
-    "h6",
-    "text-sm md:text-base mt-4 mb-2 text-muted-foreground",
-    6,
-  ),
+  h6: heading("h6", "text-sm md:text-base mt-4 mb-2 text-muted-foreground", 6),
 
   /* paragraph with image-only upgrade */
   p({ node, children, className }) {
@@ -129,7 +125,7 @@ const PostMarkdownRenderer: Components = {
     return (
       <p
         className={cn(
-          "leading-7 [&:not(:first-child)]:mt-6 break-words",
+          "leading-8 [&:not(:first-child)]:mt-6 [&:not(:last-child)]:pb-2 break-words",
           className,
         )}
       >
@@ -175,7 +171,7 @@ const PostMarkdownRenderer: Components = {
       return (
         <code
           className={cn(
-            "rounded bg-muted px-1 py-0.5 font-mono text-sm break-words",
+            "rounded bg-muted px-1 py-0.5 font-mono break-words",
             className,
           )}
         >
@@ -274,19 +270,16 @@ const PostMarkdownRenderer: Components = {
     );
   },
 
-  /* blockquote: GitHub callout + 일반 인용 분리 */
   blockquote({ children, className }) {
+    // 1. Alert 감지 (기존 로직 유지)
     const raw = textOf(children).trim();
-    const lines = raw.split(/\r?\n/);
+    const match = /^\[!([a-zA-Z]+)\]/.exec(raw);
 
-    const firstLine = lines[0] ?? "";
-    const m = /^\[!([a-zA-Z]+)\]\s*(.*)$/.exec(firstLine);
-
-    if (m) {
-      const kindRaw = m[1];
-      const afterTag = m[2] ?? "";
+    if (match) {
+      const kindRaw = match[1];
       const kind = kindRaw.toLowerCase();
 
+      // 스타일 설정 (기존 코드와 동일)
       const { containerClass, labelClass, labelText } = (() => {
         switch (kind) {
           case "important":
@@ -331,45 +324,71 @@ const PostMarkdownRenderer: Components = {
         }
       })();
 
-      // body: 라벨 줄 제외 전부
-      const bodyLines: string[] = [];
-      if (afterTag) {
-        bodyLines.push(afterTag);
-        bodyLines.push(...lines.slice(1));
-      } else {
-        bodyLines.push(...lines.slice(1));
-      }
-      const bodyText = bodyLines.join("\n").trim();
+      // 2. [!tip] 텍스트 제거 및 children 보존 로직
+      // children을 배열로 변환하여 처리
+      const childrenArray = React.Children.toArray(children);
+
+      const cleanedChildren = childrenArray.map((child, index) => {
+        // 첫 번째 줄(첫 번째 p태그)에서만 트리거 텍스트 제거 시도
+        if (index === 0 && React.isValidElement(child)) {
+          const childProps = child.props as { children?: React.ReactNode };
+
+          // p태그 내부의 첫 번째 텍스트 노드를 찾아서 [!tip] 제거
+          const grandChildren = React.Children.toArray(childProps.children);
+          const firstGrandChild = grandChildren[0];
+
+          if (
+            typeof firstGrandChild === "string" &&
+            firstGrandChild.startsWith(`[!${kindRaw}]`)
+          ) {
+            // 트리거 텍스트 제거
+            const newText = firstGrandChild.replace(/^\[!([a-zA-Z]+)\]\s*/, "");
+
+            // 텍스트 제거 후, 해당 p태그에 남은 내용이 없으면(빈 줄이면) 렌더링 하지 않음 (null 반환)
+            // 예: "> [!tip]" 만 있고 내용은 다음 줄부터 있는 경우
+            if (!newText && grandChildren.length === 1) {
+              return null;
+            }
+
+            // 텍스트가 남았거나 뒤에 다른 요소(bold 등)가 있다면 내용 교체
+            grandChildren[0] = newText;
+            return React.cloneElement(child, {
+              ...childProps,
+              children: grandChildren,
+            } as any);
+          }
+        }
+        return child;
+      });
 
       return (
         <Alert
           className={cn(
-            "my-6 border px-4 pt-4 pb-3 text-sm",
+            "my-6 border px-4 pt-4 pb-3",
             "bg-background/80 backdrop-blur",
             containerClass,
             className,
           )}
         >
-          <AlertTitle className="text-[0.7rem] font-semibold uppercase tracking-wide">
+          <AlertTitle className="text-[0.7rem] font-semibold uppercase tracking-wide mb-2">
             <span
-              className={cn("inline-flex rounded px-1.5 py-0.5", labelClass)}
+              className={cn(
+                "inline-flex rounded px-1.5 py-0.5 select-none",
+                labelClass,
+              )}
             >
               {labelText}
             </span>
           </AlertTitle>
 
-          {bodyText && (
-            <AlertDescription className="mt-2 whitespace-pre-line text-sm text-primary">
-              {bodyText}
-            </AlertDescription>
-          )}
+          <AlertDescription className="text-primary [&>p:first-child]:mt-0">
+            {cleanedChildren}
+          </AlertDescription>
         </Alert>
       );
     }
 
-    // 일반 blockquote: Alert 안 쓰고 따로 디자인
-    const content = Array.isArray(children) ? children : [children];
-
+    // 일반 blockquote
     return (
       <div
         className={cn(
@@ -379,7 +398,7 @@ const PostMarkdownRenderer: Components = {
         )}
       >
         <div className="absolute left-0 top-0 h-full w-1 rounded-l-md bg-border/80" />
-        <div className="relative space-y-1 whitespace-pre-line">{content}</div>
+        <div className="relative space-y-1">{children}</div>
       </div>
     );
   },
