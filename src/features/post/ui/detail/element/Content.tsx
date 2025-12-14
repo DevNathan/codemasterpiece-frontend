@@ -14,6 +14,9 @@ import DraftBanner from "@/features/post/ui/detail/element/DraftBanner";
 import MobileTOC from "@/features/post/ui/detail/element/MobileTOC";
 import { slugifyId } from "@/lib/util/slugify";
 import remarkInlineFormats from "@/shared/components/markdown/remarkInlineFormats";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 type Props = { isPublished: boolean; mainContent: string };
 
@@ -70,8 +73,8 @@ function ContentInner({ isPublished, mainContent }: Props) {
         <div id="post-content">
           <HeadingProvider value={ctxValue}>
             <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkInlineFormats]}
-              rehypePlugins={[rehypeRaw]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkInlineFormats]}
+              rehypePlugins={[rehypeRaw, rehypeKatex]}
               components={PostMarkdownRenderer}
             >
               {normalizedContent || "_작성된 내용이 없습니다._"}

@@ -94,7 +94,7 @@ export const CodeBlock: React.FC<Props> = ({ inline, className, children }) => {
   return (
     <div
       className={cn(
-        "cm-codeblock relative my-6 overflow-hidden rounded-lg border bg-card",
+        "cm-codeblock w-full relative my-6 overflow-hidden rounded-lg border bg-card",
         copied && "ring-2 ring-primary/40",
       )}
     >

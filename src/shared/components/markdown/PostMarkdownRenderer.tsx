@@ -158,6 +158,7 @@ const PostMarkdownRenderer: Components = {
     inline,
     className,
     children,
+    ...props
   }: {
     inline?: boolean;
     className?: string;
@@ -171,9 +172,11 @@ const PostMarkdownRenderer: Components = {
       return (
         <code
           className={cn(
-            "rounded bg-muted px-1 py-0.5 font-mono break-words",
+            "rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] break-words whitespace-pre-wrap",
+            "font-inherit",
             className,
           )}
+          {...props}
         >
           {children}
         </code>
@@ -329,8 +332,7 @@ const PostMarkdownRenderer: Components = {
       const childrenArray = React.Children.toArray(children);
 
       const cleanedChildren = childrenArray.map((child, index) => {
-        // 첫 번째 줄(첫 번째 p태그)에서만 트리거 텍스트 제거 시도
-        if (index === 0 && React.isValidElement(child)) {
+        if (React.isValidElement(child)) {
           const childProps = child.props as { children?: React.ReactNode };
 
           // p태그 내부의 첫 번째 텍스트 노드를 찾아서 [!tip] 제거
@@ -364,7 +366,7 @@ const PostMarkdownRenderer: Components = {
       return (
         <Alert
           className={cn(
-            "my-6 border px-4 pt-4 pb-3",
+            "my-6 border sm:px-4 px-2 pt-4 pb-3",
             "bg-background/80 backdrop-blur",
             containerClass,
             className,
