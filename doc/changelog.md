@@ -3,6 +3,10 @@
 ## [Unreleased]
 - 게시글 퀴즈 추가하기
 
+## [1.0.10] - 2025-12-16
+### Security
+- **긴급 보안 패치**: Next.js React Server Components 관련 원격 코드 실행 취약점('React2Shell') 해결을 위한 핫픽스 적용
+
 ## [1.0.9] - 2025-12-14
 ### Added
 - **수식 지원**: 게시글 내 LaTeX 수학 공식($$...$$) 렌더링을 위한 `remark-math`, `rehype-katex` 플러그인 도입 및 스타일 적용
