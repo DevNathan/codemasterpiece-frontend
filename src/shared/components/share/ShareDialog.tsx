@@ -19,8 +19,9 @@ import {
 } from "@/shared/components/shadcn/tooltip";
 import { toast } from "sonner";
 import { Check, Copy, Link as LinkIcon, Share2 } from "lucide-react";
-import { SiFacebook, SiLinkedin, SiX } from "react-icons/si";
+import { SiFacebook, SiX } from "react-icons/si";
 import { cn } from "@/lib/utils";
+import { FaLinkedin } from "react-icons/fa";
 
 type ShareDialogProps = {
   // Trigger 버튼 커스텀
@@ -222,7 +223,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
                       onClick={shareLi}
                       className="gap-2 hover:shadow"
                     >
-                      <SiLinkedin className="h-4 w-4" /> LinkedIn
+                      <FaLinkedin className="h-4 w-4" /> LinkedIn
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">

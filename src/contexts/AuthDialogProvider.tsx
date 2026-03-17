@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/shadcn/dialog";
 import Link from "next/link";
 import { Button } from "@/shared/components/shadcn/button";
+import { FaGithub } from "react-icons/fa";
 
 type Ctx = {
   open: boolean;
@@ -76,7 +77,7 @@ export function AuthDialogProvider({
                        bg-[#24292E] hover:bg-[#171A1D] text-white text-base font-semibold
                        transition-all shadow-lg hover:shadow-xl active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#24292E]"
             >
-              <div className="size-8 rounded-full rounded bg-github group-hover:scale-110 transition-transform" />
+              <FaGithub className="size-8 group-hover:scale-110 transition-transform" />
               <span>Sign in with GitHub</span>
             </Link>
 

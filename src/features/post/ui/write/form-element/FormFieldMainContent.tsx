@@ -500,7 +500,7 @@ function EditorShell({
       onDrop={handleDrop}
     >
       {Toolbar}
-      <ResizablePanelGroup direction="horizontal" className="h-[70vh]">
+      <ResizablePanelGroup dir="horizontal" className="h-[70vh]">
         <ResizablePanel defaultSize={50} minSize={30}>
           <CodeMirror
             value={value}

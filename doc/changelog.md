@@ -3,6 +3,12 @@
 ## [Unreleased]
 - 게시글 퀴즈 추가하기
 
+## [1.0.11] -2026-03-17
+### Updated
+- vercel에서 구동을 위한 node 25.x -> 24.x 하향 조정
+- Next.js 보안 문제에 따른 대응 버전 업데이트 >> 16.1.7
+- 디펜던시 최신화
+
 ## [1.0.10] - 2025-12-16
 ### Security
 - **긴급 보안 패치**: Next.js React Server Components 관련 원격 코드 실행 취약점('React2Shell') 해결을 위한 핫픽스 적용
