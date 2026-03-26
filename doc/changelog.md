@@ -3,6 +3,20 @@
 ## [Unreleased]
 - 게시글 퀴즈 추가하기
 
+## [1.1.0] - 2026-03-26
+### Added
+- **Vercel Monitoring**: 실시간 유저 분석 및 성능 감시를 위한 `@vercel/analytics` 및 `@vercel/speed-insights` 도입.
+- **Cache Management**: 게시글 캐싱 및 관리 기능 추가
+
+### Changed
+- **Server-Side Markdown Parsing**: 클라이언트의 부담을 줄이기 위해 마크다운 파싱 로직을 서버로 전결 이관. 프론트엔드 번들 크기 획기적 감소.
+- **Comment State Synchronization**: `CommentContext` 리팩토링을 통해 댓글 표시 개수와 로컬 스토리지 간의 '단일 진실 공급원(SSOT)' 구축.
+- **Codebase Cleanup**: `knip`을 도입하여 미사용 파일, 의존성, Export를 전수 조사하고 제거. **Lean and Mean** 코드베이스 달성.
+
+### Performance
+- **Rendering Speedup**: 마크다운 서버 렌더링 전환으로 상세 페이지 **LCP 472ms** 달성. **Extreme performance.**
+- **Build Optimization**: 불필요한 마크다운 파싱 라이브러리(`react-markdown` 등) 제거를 통한 빌드 타임 및 런타임 최적화.
+
 ## [1.0.11] -2026-03-17
 ### Updated
 - vercel에서 구동을 위한 node 25.x -> 24.x 하향 조정
