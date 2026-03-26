@@ -6,6 +6,7 @@ import { siteMetadata } from "@/app/metadata";
 import PageViewBeacon from "@/features/analytics/api/PageViewBeacon";
 import { Abril_Fatface, Noto_Sans_KR, Roboto } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   ...siteMetadata,
@@ -70,6 +71,7 @@ export default async function RootLayout({
           <PageViewBeacon />
         </Suspense>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
