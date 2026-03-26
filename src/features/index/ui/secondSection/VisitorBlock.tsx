@@ -99,14 +99,14 @@ export function VisitorsBlock() {
         >
           {/* ====== Section Header ====== */}
           <div className="flex flex-col gap-3">
-            <h2
+            <h1
               className={cn(
                 "text-2xl sm:text-4xl font-black tracking-tight",
                 "bg-gradient-to-r from-[hsl(var(--point))] via-foreground to-foreground/70 bg-clip-text text-transparent",
               )}
             >
               트래픽 인사이트
-            </h2>
+            </h1>
 
             {/* 정보 배지 라인 */}
             <div className="flex flex-wrap gap-2">

@@ -13,9 +13,9 @@ export default function EmptyState() {
         </div>
       </div>
 
-      <h2 className="text-lg font-semibold text-foreground">
+      <h1 className="text-lg font-semibold text-foreground">
         게시글이 존재하지 않습니다.
-      </h2>
+      </h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
         현재 선택하신 조건에 맞는 게시글이 없습니다. 정렬 기준을 변경하시거나
         다른 분류를 선택해보시기 바랍니다.

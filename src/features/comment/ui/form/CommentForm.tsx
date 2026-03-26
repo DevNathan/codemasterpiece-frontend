@@ -148,7 +148,7 @@ export default function CommentForm({ parentId }: Props) {
           "border border-border/60 bg-background/70 backdrop-blur-xl",
           "shadow-[0_10px_40px_rgba(0,0,0,0.15)] ring-1 ring-black/5",
           "before:absolute before:inset-[-2px] before:-z-10 before:rounded-[20px]",
-          "before:bg-[radial-gradient(120%_120%_at_0%_0%,theme(colors.point/30),transparent_55%)]",
+          "before:bg-[radial-gradient(120%_120%_at_0%_0%,theme(colors.point/2),transparent_55%)]",
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-[20px] after:ring-1 after:ring-white/5",
         )}
       >

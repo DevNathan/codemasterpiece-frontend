@@ -43,8 +43,8 @@ const CategoryItem = ({ category, childrenSlot }: Props) => {
     const count = category.children?.length ?? 0;
 
     return (
-      <Collapsible>
-        <SidebarMenuItem ref={setNodeRef} style={style} className="group">
+      <SidebarMenuItem ref={setNodeRef} style={style} className="group">
+        <Collapsible>
           <div className="flex items-center gap-2">
             {canEdit && (
               <DragHandle
@@ -90,8 +90,8 @@ const CategoryItem = ({ category, childrenSlot }: Props) => {
           <CollapsibleContent>
             <div className="relative pl-2">{childrenSlot}</div>
           </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
+        </Collapsible>
+      </SidebarMenuItem>
     );
   }
 

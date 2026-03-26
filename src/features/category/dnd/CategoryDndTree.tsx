@@ -19,7 +19,10 @@ import {
   type MoveCategoryPayload,
 } from "@/features/category/api/moveCategory";
 import type { CategoryDTO } from "@/features/category/types/CategoryDTO";
-import { SidebarMenuSub } from "@/shared/components/shadcn/sidebar";
+import {
+  SidebarMenu,
+  SidebarMenuSub,
+} from "@/shared/components/shadcn/sidebar";
 
 function cloneTree<T>(arr: T[]): T[] {
   return JSON.parse(JSON.stringify(arr));
@@ -220,9 +223,11 @@ export default function CategoryDndTree({
       collisionDetection={collision}
       onDragEnd={onDragEnd}
     >
-      <SortableContext items={tree.map((n) => n.categoryId)}>
-        {tree.map((n) => renderNode(n))}
-      </SortableContext>
+      <SidebarMenu>
+        <SortableContext items={tree.map((n) => n.categoryId)}>
+          {tree.map((n) => renderNode(n))}
+        </SortableContext>
+      </SidebarMenu>
     </DndContext>
   );
 }

@@ -148,9 +148,9 @@ const GridCard = ({ post, isEventOn }: Props) => {
               <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
 
               <div className="absolute bottom-3 left-4 right-4 z-10">
-                <h3 className="line-clamp-2 text-lg font-bold leading-tight tracking-tight text-foreground drop-shadow-sm">
+                <p className="line-clamp-2 text-lg font-bold leading-tight tracking-tight text-foreground drop-shadow-sm">
                   {title}
-                </h3>
+                </p>
                 <p className="mt-1.5 text-xs font-medium text-muted-foreground/90">
                   {getTimeGapFromNow(writeDate, formatToYearMonthDay)}
                 </p>

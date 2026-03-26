@@ -48,15 +48,15 @@ const NavSection = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarMenu className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-1">
         {isFetching ? (
-          <div className="space-y-2">
+          <SidebarMenu>
             {Array.from({ length: 7 }).map((_, i) => (
               <SidebarMenuItem key={i} className="px-1">
                 <Skeleton className="h-6 w-full rounded-md" />
               </SidebarMenuItem>
             ))}
-          </div>
+          </SidebarMenu>
         ) : (
           <CategoryDndTree
             data={categoryTree ?? []}
@@ -66,7 +66,7 @@ const NavSection = () => {
             )}
           />
         )}
-      </SidebarMenu>
+      </div>
 
       <div className="flex justify-end items-center p-3 gap-3 border-t">
         <CodeThemeSelector />

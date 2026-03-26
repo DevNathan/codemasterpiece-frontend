@@ -42,7 +42,7 @@ const CommentSection = ({ postId }: Props) => {
         enabled={visible}
       >
         <section className="w-full my-6 px-2" aria-label="댓글">
-          <h5 className="text-4xl font-semibold mb-12">Comments</h5>
+          <p className="text-4xl font-semibold mb-12">Comments</p>
           <CommentForm />
           <CommentList />
         </section>

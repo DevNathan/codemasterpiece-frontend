@@ -32,7 +32,7 @@ export default function ErrorState({ title, desc, onRetry, className }: Props) {
           <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base font-semibold tracking-tight">{title}</h3>
+          <p className="text-base font-semibold tracking-tight">{title}</p>
           <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
 
           {onRetry ? (

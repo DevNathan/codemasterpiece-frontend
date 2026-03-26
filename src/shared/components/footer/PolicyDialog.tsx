@@ -83,13 +83,17 @@ export default function PolicyDialog({
           <DialogTitle className="text-xl font-bold">
             개인정보 · 쿠키 · 통계 안내
           </DialogTitle>
-          <DialogDescription>Code Masterpiece의 개인정보 관리 정책에 관한 내용입니다.</DialogDescription>
+          <DialogDescription>
+            Code Masterpiece의 개인정보 관리 정책에 관한 내용입니다.
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-72 pr-2">
           <div className="space-y-5 text-sm text-muted-foreground leading-relaxed">
             <section>
-              <h3 className="font-semibold text-foreground">1) 요약</h3>
+              <div className="font-semibold text-foreground text-base">
+                1) 요약
+              </div>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>광고·외부 추적 스크립트는 사용하지 않습니다.</li>
                 <li>필수 쿠키와 세션 단위 통계(페이지뷰)만 처리합니다.</li>
@@ -97,7 +101,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">2) 수집 · 저장</h3>
+              <div className="font-semibold text-foreground text-base">
+                2) 수집 · 저장
+              </div>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>
                   <strong>세션(JSESSIONID)</strong>: 로그인 유지용(HTTPOnly, JS
@@ -114,9 +120,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">
+              <div className="font-semibold text-foreground text-base">
                 3) 수집하지 않음
-              </h3>
+              </div>
               <p className="mt-2">
                 별도의 개인정보는 수집·보관하지 않습니다. 로그인은{" "}
                 <strong>GitHub OAuth</strong>로만 처리하며, 자체 DB에 개인정보를
@@ -125,9 +131,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">
+              <div className="font-semibold text-foreground text-base">
                 4) GitHub 로그인 · 댓글
-              </h3>
+              </div>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>GitHub OAuth만 사용하며 별도 계정은 없습니다.</li>
                 <li>
@@ -138,9 +144,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">
+              <div className="font-semibold text-foreground text-base">
                 5) 익명(게스트) 댓글
-              </h3>
+              </div>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>표시명과 선택적 이미지 URL 저장 가능</li>
                 <li>PIN(4자리)은 단방향 해시로만 저장되며 복원 불가</li>
@@ -149,9 +155,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">
+              <div className="font-semibold text-foreground text-base">
                 6) 페이지뷰 · 세션 통계
-              </h3>
+              </div>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>
                   페이지 이동이나 제목 변경 시 페이지뷰 요청이 자동 전송됩니다.
@@ -168,7 +174,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">7) 제3자 제공</h3>
+              <div className="font-semibold text-foreground text-base">
+                7) 제3자 제공
+              </div>
               <p className="mt-2">
                 사용자 정보는 제3자에게 제공되지 않습니다. 광고나 추적 코드도
                 없습니다.
@@ -176,7 +184,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">8) 보관 · 삭제</h3>
+              <div className="font-semibold text-foreground text-base">
+                8) 보관 · 삭제
+              </div>
               <p className="mt-2">
                 댓글 및 스냅샷은 사용자가 삭제하거나 정책상 정리될 때까지
                 보관됩니다. 삭제 요청은 방명록 또는 이슈로 가능하며, PIN 검증이
@@ -185,7 +195,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">9) 보안</h3>
+              <div className="font-semibold text-foreground text-base">
+                9) 보안
+              </div>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>게스트 PIN은 해시만 저장하며 복구할 수 없습니다.</li>
                 <li>모든 통신은 HTTPS로 암호화됩니다.</li>
@@ -193,7 +205,9 @@ export default function PolicyDialog({
             </section>
 
             <section>
-              <h3 className="font-semibold text-foreground">10) 문의</h3>
+              <div className="font-semibold text-foreground text-base">
+                10) 문의
+              </div>
               <p className="mt-2">
                 GitHub 이슈 또는{" "}
                 <a

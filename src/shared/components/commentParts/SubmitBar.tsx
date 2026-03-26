@@ -7,7 +7,7 @@ export default function SubmitBar({ submitting }: { submitting?: boolean }) {
       <Button
         type="submit"
         disabled={submitting}
-        className="bg-point text-white hover:bg-point/90 shadow-sm hover:shadow active:scale-[0.98] transition-all"
+        className="bg-point text-point-foreground hover:bg-point/90 shadow-sm hover:shadow active:scale-[0.98] transition-all font-semibold"
       >
         작성
       </Button>

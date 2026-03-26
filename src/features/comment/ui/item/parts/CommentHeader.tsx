@@ -32,7 +32,7 @@ export default function CommentHeader({
           {nickname.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
-      <h5 className="font-semibold text-sm sm:text-base">{nickname}</h5>
+      <p className="font-semibold text-sm sm:text-base">{nickname}</p>
       <div className="flex sm:flex-row flex-col items-center gap-1.5">
         {deleted && (
           <Badge variant="destructive" className="gap-1 px-2 py-0.5">

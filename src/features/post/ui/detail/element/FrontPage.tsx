@@ -16,7 +16,6 @@ import {
   getTimeGapFromNow,
 } from "@/lib/util/timeFormatter";
 import ResponsiveBreadcrumb from "@/features/post/ui/detail/element/ResponsiveBreadcrumb";
-import TypingTitle from "@/features/post/ui/detail/element/TypingTitle";
 
 type Props = {
   title: string;
@@ -105,7 +104,8 @@ const FrontPage = ({
           alt={title}
           priority
           fill
-          sizes="100vw"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+          quality={80}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/20 to-black/60" />
       </div>
@@ -134,7 +134,12 @@ const FrontPage = ({
               />
 
               {/* 제목 */}
-              <TypingTitle title={title} />
+              <h1
+                className="text-2xl md:text-4xl font-extrabold tracking-tight text-white"
+                aria-label={title}
+              >
+                {title}
+              </h1>
 
               {/* 메타: 날짜/통계 */}
               <div className="mt-3 flex flex-wrap items-center gap-4 text-white/85">

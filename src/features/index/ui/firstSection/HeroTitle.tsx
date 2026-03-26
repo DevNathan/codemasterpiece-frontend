@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import { useTypeCycle } from "@/shared/hooks/useTypeCycle";
 import { cn } from "@/lib/utils";
+import { Abril_Fatface } from "next/font/google";
 
 const PHRASES = [
   "Code Masterpiece.",
   "Build. Break. Understand.",
   "No shortcuts. Only craft.",
 ];
+
+const abril = Abril_Fatface({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
 
 export function HeroTitle() {
   const [start, setStart] = useState(false);
@@ -30,10 +37,13 @@ export function HeroTitle() {
   const caretHidden = phase === "hold";
 
   return (
-    <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight drop-shadow-[0_0_15px_rgba(0,0,0,0.25)]">
-      <span className="text-point-gradient font-abril tracking-normal">
-        {text}
-      </span>
+    <h1
+      className={cn(
+        "text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight drop-shadow-[0_0_15px_rgba(0,0,0,0.25)] h-25",
+        abril.className,
+      )}
+    >
+      <span className="text-point-gradient tracking-normal">{text}</span>
       {/* 캐럿 */}
       <span
         aria-hidden

@@ -8,30 +8,18 @@ import {
   formatToYearMonthDay,
   getTimeGapFromNow,
 } from "@/lib/util/timeFormatter";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/shadcn/avatar";
 import CommentHeader from "@/features/comment/ui/item/parts/CommentHeader";
 import ReplyButtonWithDropdown from "@/features/comment/ui/item/parts/ReplyButtonWithDropdown";
 import ReactionBar from "@/features/comment/ui/item/parts/ReactionBar";
 import Children from "@/features/comment/ui/item/parts/Children";
-import HideToggleButton from "@/features/comment/ui/item/parts/HideToggleButton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/components/shadcn/tooltip";
 import { Button } from "@/shared/components/shadcn/button";
-import { Pencil, Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import CommentContent from "@/features/comment/ui/item/CommentContent";
 import CommentEditForm from "@/features/comment/ui/form/CommentEditForm";
 import DeleteConfirmDialog from "@/features/comment/ui/item/parts/DeleteConfirmDialog";
-import { clientFetchOrThrow } from "@/lib/api/clientFetch";
-import { z } from "zod";
 import { toast } from "sonner";
 import getRawComment from "@/features/comment/api/getRawComment";
+import HideToggleButton from "@/features/comment/ui/item/parts/HideToggleButton";
 
 export default function CommentItem({ comment }: { comment: CommentDTO }) {
   const { user } = useAuth();
@@ -141,6 +129,7 @@ export default function CommentItem({ comment }: { comment: CommentDTO }) {
                   <Pencil width={18} height={18} />
                 )}
               </Button>
+              <HideToggleButton commentId={commentId} hidden={hidden} />
               <DeleteConfirmDialog
                 commentId={commentId}
                 needPassword={needPassword}

@@ -13,26 +13,15 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = {
   ...siteMetadata,
   metadataBase: new URL("https://codemasterpiece.com"),
+  description: "Code Masterpiece - Build, Break, Understand.",
+  verification: {
+    google: "SuTXd_832EgP4hkw5Z3PhYnnE6c-_T_DV9PTCkP-da8",
+  },
 };
-
-const notoSansKr = Noto_Sans_KR({
-  subsets: ["latin"],
-  weight: ["100", "300", "400", "500", "700", "900"],
-  variable: "--font-noto-sans-kr",
-  display: "swap",
-});
-
 const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "700"],
   variable: "--font-roboto",
-  display: "swap",
-});
-
-const abrilFatface = Abril_Fatface({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-abril-fatface",
   display: "swap",
 });
 
@@ -43,18 +32,9 @@ export default async function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <head>
-        <meta
-          name="google-site-verification"
-          content="SuTXd_832EgP4hkw5Z3PhYnnE6c-_T_DV9PTCkP-da8"
-        />
-        <meta name="color-scheme" content="light dark" />
-      </head>
       <body
         className={`
-          ${notoSansKr.variable} 
-          ${roboto.variable} 
-          ${abrilFatface.variable} 
+          ${roboto.variable}
           font-sans
         `}
       >

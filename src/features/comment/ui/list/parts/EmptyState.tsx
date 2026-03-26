@@ -30,7 +30,7 @@ export default function EmptyState({ title, desc, className }: Props) {
         />
       </div>
 
-      <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
+      <p className="mt-4 text-base font-semibold tracking-tight">{title}</p>
       <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
     </div>
   );

@@ -68,7 +68,7 @@ const ListCard = ({ post }: Props) => {
             <span>{getTimeGapFromNow(writeDate, formatToYearMonthDay)}</span>
           </div>
 
-          <h3
+          <p
             className="
               text-[15px] font-semibold text-foreground line-clamp-2
               sm:text-base
@@ -76,7 +76,7 @@ const ListCard = ({ post }: Props) => {
             "
           >
             {title}
-          </h3>
+          </p>
 
           {/* 요약: 2줄 고정, 모바일에서도 안 넘치게 */}
           <p className="text-sm text-muted-foreground line-clamp-2">

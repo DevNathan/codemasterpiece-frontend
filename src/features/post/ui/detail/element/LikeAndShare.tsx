@@ -38,9 +38,9 @@ const LikeAndShare = forwardRef<HTMLElement, Props>(function LikeAndShare(
       )}
       aria-label="글 액션"
     >
-      <h3 className="text-base font-semibold">
+      <p className="text-base font-semibold">
         게시글이 도움이 되셨다면 좋아요를 눌러주세요
-      </h3>
+      </p>
 
       <div className="flex items-center gap-8">
         {/* LIKE */}

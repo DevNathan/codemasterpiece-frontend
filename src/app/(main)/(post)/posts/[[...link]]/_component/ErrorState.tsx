@@ -18,9 +18,9 @@ export default function ErrorState({
         </div>
       </div>
 
-      <h2 className="text-lg font-semibold text-destructive">
+      <h1 className="text-lg font-semibold text-destructive">
         데이터를 불러오는 중 문제가 발생했습니다.
-      </h2>
+      </h1>
       <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
         {message}
       </p>

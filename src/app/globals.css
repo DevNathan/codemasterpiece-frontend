@@ -6,6 +6,7 @@
 
 @theme inline {
     --color-point: hsl(var(--point));
+    --color-point-foreground: hsl(var(--point-foreground));
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-sidebar-ring: var(--sidebar-ring);
@@ -42,12 +43,12 @@
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
 
-    --font-sans: var(--font-noto-sans-kr), var(--font-roboto), sans-serif;
-    --font-abril: var(--font-abril-fatface), var(--font-noto-sans-kr), sans-serif;
+    --font-sans: var(--font-roboto), ui-sans-serif, system-ui;
 }
 
 :root {
     --point: 42 94% 58%;
+    --point-foreground: 42 94% 15%;
     --radius: 0.625rem;
     --background: oklch(1 0 0);
     --foreground: oklch(0.141 0.005 285.823);
@@ -151,14 +152,17 @@
 
 .point-amber {
     --point: 42 94% 58%;
+    --point-foreground: 42 94% 15%;
 }
 
 .point-sky {
     --point: 198 93% 60%;
+    --point-foreground: 198 93% 15%;
 }
 
 .point-purple {
     --point: 262 83% 67%;
+    --point-foreground: 262 83% 15%;
 }
 
 /* === point 파생 톤 (테마 자동 반응) === */
