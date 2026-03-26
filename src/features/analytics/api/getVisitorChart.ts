@@ -6,7 +6,7 @@ import {
   SeriesPointSchema,
 } from "@/features/analytics/types/SeriesPoint";
 
-export type VisitorRangeType = "day" | "week" | "month";
+type VisitorRangeType = "day" | "week" | "month";
 
 type Params = {
   type: VisitorRangeType;

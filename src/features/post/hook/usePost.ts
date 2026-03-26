@@ -2,13 +2,19 @@
 
 import { useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import getPostDetail from "@/features/post/api/getPostDetail";
 import type { PostDetailDTO } from "@/features/post/type/PostDetailDTO";
 import { CookieManager } from "@/shared/module/cookieManager";
 import { postKeys, type ActorKey } from "@/features/post/queries/keys";
 import { COOKIES } from "@/lib/constants/cookies";
 import { useAuth } from "@/contexts/UserContext";
+
+type PostClientData = Omit<PostDetailDTO, "mainContent" | "toc">;
 
 type UsePostOptions = {
   slug?: string;
@@ -22,24 +28,22 @@ export function usePost(opts: UsePostOptions = {}) {
     slug: slugArg,
     actor: actorOverride,
     staleTimeMs = 5 * 60 * 1000,
-    gcTimeMs   = 30 * 60 * 1000,
+    gcTimeMs = 30 * 60 * 1000,
   } = opts;
 
   const params = useParams<{ slug?: string }>();
   const routeSlug = params?.slug;
   const slug = slugArg ?? routeSlug;
 
-  // 로컬 액터(폴백)
   const { user } = useAuth();
   const clientId = CookieManager.getItem(COOKIES.CLIENT_ID) ?? null;
 
   const localActor: ActorKey = useMemo(() => {
     if (user?.userId) return { type: "user", id: "auth" };
-    if (clientId)      return { type: "client", id: clientId };
+    if (clientId) return { type: "client", id: clientId };
     return { type: "none", id: "0" };
   }, [user?.userId, clientId]);
 
-  // 최종 actor: 서버 override → 로컬
   const actor = actorOverride ?? localActor;
 
   const queryKey = useMemo(() => {
@@ -49,10 +53,16 @@ export function usePost(opts: UsePostOptions = {}) {
 
   const qc = useQueryClient();
 
-  const query = useQuery<PostDetailDTO>({
+  const query = useQuery<PostClientData>({
     queryKey,
     enabled: Boolean(slug),
-    queryFn: async () => (await getPostDetail(slug as string)).data!,
+    queryFn: async () => {
+      // 클라이언트는 무조건 본문을 제외(true)하고 가볍게 요청한다.
+      const res = await getPostDetail(slug as string, true);
+      // 서버에서 null이나 빈 배열이 넘어와도 여기서 확실하게 찢어버린다.
+      const { mainContent, toc, ...clientData } = res.data!;
+      return clientData;
+    },
     staleTime: staleTimeMs,
     gcTime: gcTimeMs,
     placeholderData: keepPreviousData,
@@ -65,7 +75,11 @@ export function usePost(opts: UsePostOptions = {}) {
       const key = postKeys.detail({ slug: targetSlug, actor });
       await qc.prefetchQuery({
         queryKey: key,
-        queryFn: async () => (await getPostDetail(targetSlug)).data!,
+        queryFn: async () => {
+          const res = await getPostDetail(targetSlug, true);
+          const { mainContent, toc, ...clientData } = res.data!;
+          return clientData;
+        },
         staleTime: staleTimeMs,
       });
     },

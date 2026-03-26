@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import {
   FormControl,
@@ -30,6 +30,10 @@ const FormFieldHeadImage = () => {
   const [uploading, setUploading] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
 
+  // Hydration Mismatch 방지용 마운트 체크
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <FormField
       control={control}
@@ -45,7 +49,8 @@ const FormFieldHeadImage = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={!field.value && !previewUrl}
+                    // 마운트 전에는 무조건 false로 고정하여 서버와 일치시킨다.
+                    disabled={mounted ? (!field.value && !previewUrl) : false}
                     onClick={() => {
                       setValue("headImage", "", {
                         shouldDirty: true,
@@ -66,7 +71,8 @@ const FormFieldHeadImage = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button type="button" variant="outline" size="sm" disabled>
+                  {/* 정적 비활성 버튼도 명시적으로 boolean 처리 */}
+                  <Button type="button" variant="outline" size="sm" disabled={true}>
                     <Images className="mr-1.5 size-4" />
                     기존 배너 선택
                   </Button>
@@ -115,7 +121,8 @@ const FormFieldHeadImage = () => {
                       onClick={() =>
                         document.getElementById("head-image-input")?.click()
                       }
-                      disabled={uploading}
+                      // 마운트 체크 및 엄격한 불리언 변환
+                      disabled={mounted ? !!uploading : false}
                     >
                       <Replace className="mr-1.5 size-4" />
                       교체
@@ -142,13 +149,14 @@ const FormFieldHeadImage = () => {
   );
 };
 
+// ... (HeadImageUploader 컴포넌트 생략 - 기존과 동일하게 유지하되 props에서 strict하게 처리)
 function HeadImageUploader({
-                             uploading,
-                             previewUrl,
-                             onPick,
-                             onUploading,
-                             onHint,
-                           }: {
+  uploading,
+  previewUrl,
+  onPick,
+  onUploading,
+  onHint,
+}: {
   uploading: boolean;
   previewUrl: string;
   onPick: (fileId: string, url: string) => void;

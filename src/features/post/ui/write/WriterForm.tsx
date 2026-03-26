@@ -12,7 +12,7 @@ import { Separator } from "@/shared/components/shadcn/separator";
 import FormFieldCategory from "@/features/post/ui/write/form-element/FormFieldCategory";
 import FormFieldTag from "@/features/post/ui/write/form-element/FormFieldTag";
 import FormFieldHeadImage from "@/features/post/ui/write/form-element/FormFieldHeadImage";
-import FormFieldMainContent from "@/features/post/ui/write/form-element/FormFieldMainContent";
+import FormFieldMainContent from "@/features/post/ui/write/form-element/mainContent/FormFieldMainContent";
 import { Input } from "@/shared/components/shadcn/input";
 import { Textarea } from "@/shared/components/shadcn/textarea";
 import { Switch } from "@/shared/components/shadcn/switch";

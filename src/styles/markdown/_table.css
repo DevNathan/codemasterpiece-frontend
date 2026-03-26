@@ -1,0 +1,23 @@
+.cm-markdown table {
+    @apply w-full text-sm border-collapse my-6 overflow-x-auto block border border-border rounded-md;
+}
+
+.cm-markdown thead {
+    @apply bg-muted/60 border-b border-border;
+}
+
+.cm-markdown tbody tr:last-child {
+    @apply border-0;
+}
+
+.cm-markdown tr {
+    @apply border-b border-border hover:bg-muted/30;
+}
+
+.cm-markdown th {
+    @apply px-3 py-2 font-semibold text-foreground align-middle border-r border-border/40 text-left;
+}
+
+.cm-markdown td {
+    @apply px-3 py-2 align-top border-r border-border/40;
+}

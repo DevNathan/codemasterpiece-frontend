@@ -1,18 +1,15 @@
 import { useMemo, useRef } from "react";
 
 const TOKEN_RE =
-  /!\[[^\]]*]\(file:\/\/(FL-[A-Z0-9]{26})(?:\?t=([\w\-_.]+))?\)/g;
+  /!\[[^\]]*]\(image-token:\/\/(FL-[A-Z0-9]{26})(?:\?t=([\w\-_.]+))?\)/g;
 
 function ensureTrailingSlash(u: string) {
   if (!u) return u;
   return u.endsWith("/") ? u : `${u}/`;
 }
 
-/** baseDirUrl이 우연히 .../original/ 이나 .../variants/ 로 들어오면 잘라서 ULID/까지만 남긴다 */
 function normalizeBaseDir(u: string) {
   let v = ensureTrailingSlash(u.trim());
-  // .../ULID/original/  -> .../ULID/
-  // .../ULID/variants/ -> .../ULID/
   v = v.replace(/\/(original|variants)\/$/i, "/");
   return v;
 }
@@ -34,9 +31,10 @@ export function useImageTokenResolver() {
       const base = cacheRef.current.get(id);
       if (!base) return match;
 
-      // base: .../ULID/
       const url = t ? `${base}variants/${t}` : `${base}original`;
-      const needle = t ? `file://${id}?t=${t}` : `file://${id}`;
+
+      const needle = t ? `image-token://${id}?t=${t}` : `image-token://${id}`;
+
       return match.replace(needle, url);
     });
   };

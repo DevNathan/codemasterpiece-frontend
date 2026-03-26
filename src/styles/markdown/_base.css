@@ -1,0 +1,80 @@
+.cm-markdown {
+    @apply text-foreground break-words;
+}
+
+.cm-markdown p {
+    @apply leading-8;
+}
+
+.cm-markdown p:not(:first-child) {
+    @apply mt-6;
+}
+
+.cm-markdown p:not(:last-child) {
+    @apply pb-2;
+}
+
+.cm-markdown a {
+    @apply text-point underline underline-offset-4 hover:opacity-90 break-words transition-colors duration-200;
+}
+
+.cm-markdown a:visited {
+    color: color-mix(in oklch, hsl(var(--point)) 70%, transparent);
+}
+
+.cm-markdown code:not(pre code) {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] break-words whitespace-pre-wrap;
+    font-family: inherit;
+}
+
+.cm-markdown img {
+    @apply rounded-md border bg-card my-4 mx-auto block max-w-full h-auto cursor-zoom-in transition-transform duration-200 hover:opacity-90;
+}
+
+.cm-markdown hr {
+    @apply my-8 border-t border-border;
+}
+
+.cm-markdown strong {
+    @apply font-semibold;
+}
+
+.cm-markdown em {
+    @apply italic;
+}
+
+.cm-markdown sub {
+    @apply align-baseline text-[0.7em] translate-y-[0.1em];
+}
+
+.cm-markdown sup {
+    @apply align-super text-[0.7em];
+}
+
+.cm-markdown u {
+    @apply underline underline-offset-4 decoration-muted-foreground/70;
+}
+
+.cm-markdown mark {
+    @apply rounded px-1 bg-point/10 text-point;
+}
+
+.cm-markdown kbd {
+    @apply rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-medium;
+}
+
+.cm-markdown details {
+    @apply my-4 rounded-md border border-border bg-card;
+}
+
+.cm-markdown details[open] > summary {
+    @apply border-b border-border;
+}
+
+.cm-markdown summary {
+    @apply cursor-pointer list-none px-4 py-2 font-medium hover:bg-muted/50;
+}
+
+.cm-markdown .cm-code-inline {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-sm text-foreground;
+}

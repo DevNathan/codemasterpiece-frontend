@@ -13,7 +13,7 @@ export type CategoryDTO = {
   children: CategoryDTO[];
 };
 
-export const CategorySchema: z.ZodType<CategoryDTO> = z.lazy(() =>
+const CategorySchema: z.ZodType<CategoryDTO> = z.lazy(() =>
   z.object({
     categoryId: z.string(),
     name: z.string(),

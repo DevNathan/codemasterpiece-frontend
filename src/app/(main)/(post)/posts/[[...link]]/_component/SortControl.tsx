@@ -13,13 +13,13 @@ import {
 import { Button } from "@/shared/components/shadcn/button";
 import { ArrowDownUp } from "lucide-react";
 
-export type SortKey =
+type SortKey =
   | "createdAt"
   | "updatedAt"
   | "title"
   | "viewCount"
   | "likeCount";
-export type SortDir = "ASC" | "DESC";
+type SortDir = "ASC" | "DESC";
 
 type SortButtonProps = {
   sortKey: SortKey;

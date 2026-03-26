@@ -18,7 +18,6 @@ import { useAuth } from "@/contexts/UserContext";
 import { CookieManager } from "@/shared/module/cookieManager";
 import { COOKIES } from "@/lib/constants/cookies";
 import type { CommentPageResponse } from "@/features/comment/type/CommentPageResponse";
-import getCommentPage from "@/features/comment/api/getCommentPage";
 import type { CommentDTO } from "@/features/comment/type/CommentDTO";
 import {
   type CommentReaction,
@@ -31,6 +30,7 @@ import { formatKoreanDateTime } from "@/lib/util/timeFormatter";
 import { ActorKey } from "@/features/comment/queries/keys";
 import { UseFormReturn } from "react-hook-form";
 import deleteComment from "@/features/comment/api/deleteComment";
+import getCommentPage from "@/features/comment/api/getCommentPage";
 
 /**
  * 댓글 조회/페이지네이션/캐싱 컨텍스트 데이터 형식

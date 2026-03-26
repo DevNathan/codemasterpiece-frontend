@@ -123,37 +123,24 @@ export function useTypeCycle(
   useEffect(() => {
     if (phase !== "deleting") return;
 
-    let cancelled = false;
+    if (display.length === 0) {
+      const timer = setTimeout(() => {
+        setIndex((prev) => (prev + 1) % phrases.length);
+        setKickTyping(true);
+        setPhase("typing");
+      }, gapMs);
+      return () => clearTimeout(timer);
+    }
 
-    const step = () => {
-      if (cancelled) return;
+    const timer = setTimeout(
+      () => {
+        setDisplay((prev) => prev.slice(0, -1));
+      },
+      Math.max(eraseMs, 8),
+    );
 
-      setDisplay((prev) => {
-        if (prev.length <= 0) {
-          setIndex((i) => {
-            const next = (i + 1) % phrases.length;
-            window.setTimeout(() => {
-              if (!cancelled) {
-                setKickTyping(true);
-                setPhase("typing");
-              }
-            }, gapMs);
-            return next;
-          });
-          return "";
-        }
-        window.setTimeout(step, eraseMs);
-        return prev.slice(0, -1);
-      });
-    };
-
-    const s = window.setTimeout(step, Math.max(eraseMs, 8));
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(s);
-    };
-  }, [phase, eraseMs, gapMs, phrases.length]);
+    return () => clearTimeout(timer);
+  }, [phase, display.length, eraseMs, gapMs, phrases.length]);
 
   return { text: display, phase };
 }

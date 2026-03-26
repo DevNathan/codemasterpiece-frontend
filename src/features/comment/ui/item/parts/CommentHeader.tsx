@@ -33,7 +33,7 @@ export default function CommentHeader({
         </AvatarFallback>
       </Avatar>
       <h5 className="font-semibold text-sm sm:text-base">{nickname}</h5>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex sm:flex-row flex-col items-center gap-1.5">
         {deleted && (
           <Badge variant="destructive" className="gap-1 px-2 py-0.5">
             <Trash className="h-3.5 w-3.5" />

@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { PostListDTOSchema } from "@/features/post/type/PostListDTO";
 
+export const PostTocDTOSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  depth: z.number().int(),
+});
+
+export type PostTocDTO = z.infer<typeof PostTocDTOSchema>;
+
 export const PostDetailDTOSchema = z.object({
   postId: z.string(),
   slug: z.string(),
@@ -9,7 +17,7 @@ export const PostDetailDTOSchema = z.object({
   headContent: z.string(),
   categoryName: z.string(),
   categoryLink: z.string(),
-  mainContent: z.string(),
+  mainContent: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
   published: z.boolean(),
@@ -21,6 +29,9 @@ export const PostDetailDTOSchema = z.object({
   liked: z.boolean(),
 
   tags: z.array(z.string()),
+
+  toc: z.array(PostTocDTOSchema).default([]),
+
   morePosts: z.array(PostListDTOSchema).default([]),
 });
 

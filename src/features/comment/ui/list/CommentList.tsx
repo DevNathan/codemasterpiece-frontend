@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useCommentContext } from "@/features/comment/context/CommentContext";
 import PageSelector from "@/shared/components/pagination/PageSelector";
 import ControlsBar from "@/features/comment/ui/list/parts/ControlsBar";
@@ -11,6 +11,7 @@ import RootList from "@/features/comment/ui/list/parts/RootList";
 import SkeletonList from "@/features/comment/ui/shared/SkeletonList";
 import ErrorState from "@/features/comment/ui/list/parts/ErrorState";
 import EmptyState from "@/features/comment/ui/list/parts/EmptyState";
+import { handleCodeBlockCopy } from "@/lib/markdown/codeBlock";
 
 const CommentList = () => {
   const {
@@ -23,28 +24,48 @@ const CommentList = () => {
   const roots = data?.content ?? [];
   const isInitialLoading = isLoading || (isFetching && !data);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 이벤트 위임 리스너 등록
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleContainerClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const copyBtn = target.closest(
+        ".cm-codeblock-copy-btn",
+      ) as HTMLButtonElement;
+
+      if (copyBtn) {
+        handleCodeBlockCopy(copyBtn);
+      }
+    };
+
+    container.addEventListener("click", handleContainerClick);
+    return () => container.removeEventListener("click", handleContainerClick);
+  }, []);
+
   const handleChangeSize = useCallback(
     (v: number | string) => {
       const n = Math.max(1, parseInt(String(v), 10) || 5);
-      setSize(n); // 훅 내부에서 LocalStorage까지 같이 처리함
+      setSize(n);
     },
     [setSize],
   );
 
   return (
-    <div className="px-0 py-2 my-10 space-y-6 sm:px-3">
-      {/* 상단 컨트롤바 */}
+    <div className="px-0 py-2 my-10 space-y-6 sm:px-3" ref={containerRef}>
       <ControlsBar
         left={<SizeSelector value={size} onChange={handleChangeSize} />}
         right={isFetching && data ? <FetchingBadge /> : null}
       />
 
-      {/* 본문 상태 스위치 */}
       <StateSwitch
         loading={isInitialLoading}
         error={error}
         empty={!roots || roots.length === 0}
-        loadingView={<SkeletonList count={5} depth={0} />}
+        loadingView={<SkeletonList count={size} depth={0} />}
         errorView={
           <ErrorState
             title="댓글을 불러오는 중 문제가 발생했어요"

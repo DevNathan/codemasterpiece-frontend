@@ -30,12 +30,17 @@ export const ImageViewerProvider = ({
 }) => {
   const [src, setSrc] = useState<string | null>(null);
   const [alt, setAlt] = useState("");
+
   const [scale, setScale] = useState(1);
+  const scaleRef = useRef(1); // 이벤트 리스너에서 최신 scale 값을 참조하기 위한 Ref
 
-  const [translateX, setTranslateX] = useState(0);
-  const [translateY, setTranslateY] = useState(0);
+  // 리액트 리렌더링 지옥을 피하기 위해 X, Y 좌표는 상태가 아닌 Ref로 관리합니다.
+  const translateRef = useRef({ x: 0, y: 0 });
+  const imgRef = useRef<HTMLImageElement>(null);
 
+  const [isDragging, setIsDragging] = useState(false);
   const draggingRef = useRef(false);
+
   const dragStartRef = useRef<{
     x: number;
     y: number;
@@ -43,24 +48,28 @@ export const ImageViewerProvider = ({
     ty: number;
   } | null>(null);
 
-  const open = (s: string, a: string) => {
+  const open = useCallback((s: string, a: string) => {
     setSrc(s);
     setAlt(a);
     setScale(1);
-    setTranslateX(0);
-    setTranslateY(0);
+    scaleRef.current = 1;
+    translateRef.current = { x: 0, y: 0 };
+    setIsDragging(false);
+    draggingRef.current = false;
 
     if (typeof document !== "undefined") {
       document.body.style.overflow = "hidden";
     }
-  };
+  }, []);
 
   const close = useCallback(() => {
     setSrc(null);
     setAlt("");
     setScale(1);
-    setTranslateX(0);
-    setTranslateY(0);
+    scaleRef.current = 1;
+    translateRef.current = { x: 0, y: 0 };
+    setIsDragging(false);
+    draggingRef.current = false;
 
     if (typeof document !== "undefined") {
       document.body.style.overflow = "";
@@ -68,17 +77,29 @@ export const ImageViewerProvider = ({
   }, []);
 
   const zoomIn = useCallback(() => {
-    setScale((prev) => Math.min(MAX_SCALE, prev + STEP));
+    setScale((prev) => {
+      const next = Math.min(MAX_SCALE, prev + STEP);
+      scaleRef.current = next;
+      return next;
+    });
   }, []);
 
   const zoomOut = useCallback(() => {
-    setScale((prev) => Math.max(MIN_SCALE, prev - STEP));
+    setScale((prev) => {
+      const next = Math.max(MIN_SCALE, prev - STEP);
+      scaleRef.current = next;
+      return next;
+    });
   }, []);
 
   const resetZoom = useCallback(() => {
     setScale(1);
-    setTranslateX(0);
-    setTranslateY(0);
+    scaleRef.current = 1;
+    translateRef.current = { x: 0, y: 0 };
+    // 이미지가 패닝된 상태에서 scale이 이미 1이라면 리렌더링이 발생하지 않으므로 직접 DOM을 리셋합니다.
+    if (imgRef.current) {
+      imgRef.current.style.transform = `translate3d(0px, 0px, 0) scale(1)`;
+    }
   }, []);
 
   // 키보드 핸들링 (+ / - / 0 / Esc)
@@ -86,7 +107,6 @@ export const ImageViewerProvider = ({
     if (!src) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      // 입력중이면 무시
       const t = e.target as HTMLElement | null;
       if (
         t &&
@@ -97,21 +117,18 @@ export const ImageViewerProvider = ({
         return;
       }
 
-      // 닫기
       if (e.key === "Escape") {
         e.preventDefault();
         close();
         return;
       }
 
-      // 리셋
       if (e.key === "0") {
         e.preventDefault();
         resetZoom();
         return;
       }
 
-      // 줌 인: +, = (Shift+), ArrowUp
       if (
         e.key === "+" ||
         (e.key === "=" && e.shiftKey) ||
@@ -122,7 +139,6 @@ export const ImageViewerProvider = ({
         return;
       }
 
-      // 줌 아웃: -, _, ArrowDown
       if (e.key === "-" || e.key === "_" || e.key === "ArrowDown") {
         e.preventDefault();
         zoomOut();
@@ -134,8 +150,7 @@ export const ImageViewerProvider = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [src, close, zoomIn, zoomOut, resetZoom]);
 
-  // 휠 줌
-  const handleWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
+  const handleWheel: React.WheelEventHandler<HTMLImageElement> = (e) => {
     e.preventDefault();
     if (e.deltaY < 0) {
       zoomIn();
@@ -144,34 +159,32 @@ export const ImageViewerProvider = ({
     }
   };
 
-  // 마우스 드래그 시작
-  const handleMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    // 왼쪽 버튼만
+  const handleMouseDown: React.MouseEventHandler<HTMLImageElement> = (e) => {
     if (e.button !== 0) return;
-    // 확대 안 돼있으면 패닝 의미 적으니 원하면 막아도 됨 (지금은 허용)
     draggingRef.current = true;
+    setIsDragging(true); // 커서 스타일 및 transition 변경을 위해 1회 렌더링을 유발합니다.
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      tx: translateX,
-      ty: translateY,
+      tx: translateRef.current.x,
+      ty: translateRef.current.y,
     };
   };
 
-  // 터치 드래그 시작
-  const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = (e) => {
+  const handleTouchStart: React.TouchEventHandler<HTMLImageElement> = (e) => {
     if (e.touches.length !== 1) return;
     const t = e.touches[0];
     draggingRef.current = true;
+    setIsDragging(true);
     dragStartRef.current = {
       x: t.clientX,
       y: t.clientY,
-      tx: translateX,
-      ty: translateY,
+      tx: translateRef.current.x,
+      ty: translateRef.current.y,
     };
   };
 
-  // 전역 move/up 리스너 (드래그 중)
+  // 전역 move/up 리스너 (드래그 중 DOM 직접 조작)
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (!draggingRef.current || !dragStartRef.current) return;
@@ -180,13 +193,21 @@ export const ImageViewerProvider = ({
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
 
-      setTranslateX(dragStartRef.current.tx + dx);
-      setTranslateY(dragStartRef.current.ty + dy);
+      translateRef.current.x = dragStartRef.current.tx + dx;
+      translateRef.current.y = dragStartRef.current.ty + dy;
+
+      // 리액트를 거치지 않고 DOM을 직접 수정하여 60fps를 방어합니다.
+      if (imgRef.current) {
+        imgRef.current.style.transform = `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scaleRef.current})`;
+      }
     };
 
     const onMouseUp = () => {
-      draggingRef.current = false;
-      dragStartRef.current = null;
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        setIsDragging(false); // 드래그 종료 시 1회 렌더링
+        dragStartRef.current = null;
+      }
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -197,13 +218,20 @@ export const ImageViewerProvider = ({
       const dx = t.clientX - dragStartRef.current.x;
       const dy = t.clientY - dragStartRef.current.y;
 
-      setTranslateX(dragStartRef.current.tx + dx);
-      setTranslateY(dragStartRef.current.ty + dy);
+      translateRef.current.x = dragStartRef.current.tx + dx;
+      translateRef.current.y = dragStartRef.current.ty + dy;
+
+      if (imgRef.current) {
+        imgRef.current.style.transform = `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scaleRef.current})`;
+      }
     };
 
     const onTouchEnd = () => {
-      draggingRef.current = false;
-      dragStartRef.current = null;
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        setIsDragging(false);
+        dragStartRef.current = null;
+      }
     };
 
     window.addEventListener("mousemove", onMouseMove);
@@ -223,7 +251,7 @@ export const ImageViewerProvider = ({
 
   const cursorClass =
     scale > 1
-      ? draggingRef.current
+      ? isDragging
         ? "cursor-grabbing"
         : "cursor-grab"
       : "cursor-default";
@@ -240,33 +268,27 @@ export const ImageViewerProvider = ({
           )}
           onClick={close}
         >
-          {/* 줌 + 패닝 영역 */}
-          <div
+          <img
+            ref={imgRef}
+            src={src}
+            alt={alt}
             className={cn(
-              "relative max-w-[95vw] max-h-[95vh] flex items-center justify-center",
+              "max-w-full max-height-full select-none",
               cursorClass,
             )}
+            style={{
+              maxWidth: "95vw",
+              maxHeight: "95vh",
+              transform: `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scale})`,
+              transition: isDragging ? "none" : "transform 120ms ease-out",
+              transformOrigin: "center center",
+            }}
+            draggable={false}
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
-          >
-            <img
-              src={src}
-              alt={alt}
-              className="max-w-full max-height-full select-none"
-              style={{
-                maxWidth: "95vw",
-                maxHeight: "95vh",
-                transform: `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`,
-                transition: draggingRef.current
-                  ? "none"
-                  : "transform 120ms ease-out",
-                transformOrigin: "center center",
-              }}
-              draggable={false}
-            />
-          </div>
+          />
 
           {/* 하단 컨트롤 바 */}
           <div

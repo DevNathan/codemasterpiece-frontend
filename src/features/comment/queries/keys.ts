@@ -3,7 +3,7 @@ export type ActorKey =
   | { type: "client"; id: string }
   | { type: "none" };
 
-export const commentKeys = {
+const commentKeys = {
   all: ["comments"] as const,
 
   page: (p: {

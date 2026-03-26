@@ -1,0 +1,31 @@
+.cm-markdown .cm-codeblock-wrapper {
+    @apply w-full relative my-6 overflow-hidden rounded-lg border border-border bg-card transition-all duration-200;
+}
+
+.cm-markdown .cm-codeblock-wrapper.copied {
+    @apply ring-2 ring-primary/40;
+}
+
+.cm-markdown .cm-codeblock-toolbar {
+    @apply flex items-center justify-between border-b border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors duration-200;
+}
+
+.cm-markdown .cm-codeblock-toolbar.copied {
+    @apply bg-primary/10;
+}
+
+.cm-markdown .cm-codeblock-toolbar:not(.copied) {
+    @apply bg-muted/40;
+}
+
+.cm-markdown .cm-codeblock-lang {
+    @apply font-medium uppercase;
+}
+
+.cm-markdown .cm-codeblock-copy-btn {
+    @apply hover:bg-muted/80 rounded p-1 transition-colors cursor-pointer flex items-center gap-1 font-medium;
+}
+
+.cm-markdown pre.hljs {
+    @apply overflow-x-auto text-sm leading-relaxed p-4 block font-mono bg-transparent m-0 border-none;
+}

@@ -24,17 +24,20 @@ import {
   TooltipTrigger,
 } from "@/shared/components/shadcn/tooltip";
 import { Button } from "@/shared/components/shadcn/button";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 import CommentContent from "@/features/comment/ui/item/CommentContent";
-import CommentEditForm from "@/features/comment/ui/item/CommentEditForm";
+import CommentEditForm from "@/features/comment/ui/form/CommentEditForm";
 import DeleteConfirmDialog from "@/features/comment/ui/item/parts/DeleteConfirmDialog";
+import { clientFetchOrThrow } from "@/lib/api/clientFetch";
+import { z } from "zod";
+import { toast } from "sonner";
+import getRawComment from "@/features/comment/api/getRawComment";
 
-type Props = { comment: CommentDTO };
-
-export default function CommentItem({ comment }: Props) {
+export default function CommentItem({ comment }: { comment: CommentDTO }) {
   const { user } = useAuth();
-
   const [isEditing, setEditing] = useState(false);
+  const [isFetchingRaw, setIsFetchingRaw] = useState(false);
+  const [rawContent, setRawContent] = useState<string | null>(null);
 
   const {
     commentId,
@@ -52,121 +55,104 @@ export default function CommentItem({ comment }: Props) {
     anon,
   } = comment;
 
-  const indentDepth = Math.min(depth, 2);
   const isAuthorRole = useMemo(() => user?.role === "AUTHOR", [user?.role]);
   const isOwner = useMemo(
-    () => Boolean(user?.userId) && user!.userId === actorId,
+    () => user?.userId === actorId,
     [user?.userId, actorId],
   );
-
-  // 삭제/수정 노출: 익명 || 본인 || AUTHOR
   const modifiable = Boolean(anon) || isOwner || isAuthorRole;
-
-  // 익명 + 비소유자 + 비AUTHOR → 비번 필요
   const needPassword = Boolean(anon) && !isOwner && !isAuthorRole;
+
+  const handleStartEdit = async () => {
+    // rawContent가 null일 때만 새로 페치한다.
+    if (rawContent !== null) {
+      setEditing(true);
+      return;
+    }
+
+    try {
+      setIsFetchingRaw(true);
+      const res = await getRawComment({ commentId });
+      if (res.data) {
+        setRawContent(res.data);
+        setEditing(true);
+      }
+    } catch (error: any) {
+      toast.error("원본 데이터를 가져오지 못했습니다.");
+    } finally {
+      setIsFetchingRaw(false);
+    }
+  };
 
   return (
     <li className="block w-full box-border">
       <div
         className={cn(
-          "flex gap-3 sm:gap-4 items-stretch bg-sidebar rounded-xl px-3 py-3 sm:px-5 sm:py-4 shadow-sm w-full border-border border-b",
-          {
-            "ml-3 sm:ml-4": indentDepth > 0,
-            "pl-2 sm:pl-4": indentDepth === 1,
-            "pl-3 sm:pl-6": indentDepth === 2,
-          },
+          "flex gap-3 items-stretch bg-sidebar rounded-xl px-3 py-3 shadow-sm w-full border-border border-b",
+          { "ml-4": depth > 0 },
         )}
       >
-        {/* 좌측 리액션 바 (모바일에서도 최소 폭만 차지) */}
         <ReactionBar
           commentId={commentId}
           score={reaction}
           myReaction={myReaction}
         />
 
-        {/* 아바타 + 본문 래퍼
-            - 모바일: flex-col → 아바타가 위, 본문이 아래로 떨어져서 텍스트 폭 확보
-            - sm 이상: flex-row → 기존 데스크탑 느낌 유지
-        */}
-        <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:gap-3">
-          {/* 본문 */}
-          <div className="flex flex-col justify-center h-full flex-1 min-w-0">
-            <CommentHeader
-              profileImage={profileImage}
-              nickname={nickname}
-              timeText={getTimeGapFromNow(
-                new Date(createdAt),
-                formatToYearMonthDay,
-              )}
-              deleted={deleted}
-              hidden={hidden}
+        <div className="flex flex-1 flex-col gap-2">
+          <CommentHeader
+            profileImage={profileImage}
+            nickname={nickname}
+            timeText={getTimeGapFromNow(
+              new Date(createdAt),
+              formatToYearMonthDay,
+            )}
+            deleted={deleted}
+            hidden={hidden}
+          />
+
+          {!isEditing ? (
+            <CommentContent content={content} />
+          ) : (
+            <CommentEditForm
+              commentId={commentId}
+              actorId={actorId}
+              initialContent={rawContent || ""}
+              anon={anon}
+              needPassword={needPassword}
+              onCloseAction={() => {
+                setEditing(false);
+                setRawContent(null);
+              }}
+              className="mt-2"
             />
+          )}
 
-            {/* 콘텐츠 or 수정 폼 — 내부에서 자체 상태 관리 */}
-            {!isEditing ? (
-              <CommentContent
-                content={content}
-                className={cn(
-                  "prose prose-sm sm:prose-base max-w-none mt-1 transition-colors break-words",
-                  deleted && "text-muted-foreground",
-                  !deleted && hidden && "text-muted-foreground",
+          {!deleted && modifiable && !isEditing && (
+            <div className="flex justify-end mt-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleStartEdit}
+                disabled={isFetchingRaw}
+              >
+                {isFetchingRaw ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Pencil width={18} height={18} />
                 )}
-              />
-            ) : (
-              <CommentEditForm
+              </Button>
+              <DeleteConfirmDialog
                 commentId={commentId}
-                actorId={actorId}
-                initialContent={content}
-                anon={anon}
                 needPassword={needPassword}
-                onCloseAction={() => setEditing(false)}
-                className="mt-2"
               />
-            )}
-
-            {!deleted && (
-              <div className="flex items-center justify-end gap-1.5 sm:gap-2 mt-2">
-                {isAuthorRole && (
-                  <HideToggleButton commentId={commentId} hidden={hidden} />
-                )}
-
-                {modifiable && (
-                  <>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 sm:w-9 sm:h-9 p-0 rounded-full hover:bg-accent"
-                          aria-label="댓글 수정"
-                          onClick={() => setEditing(true)}
-                        >
-                          <Pencil width={18} height={18} />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" align="center">
-                        댓글 수정
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <DeleteConfirmDialog
-                      commentId={commentId}
-                      needPassword={needPassword}
-                    />
-                  </>
-                )}
-
-                <ReplyButtonWithDropdown
-                  nickname={nickname}
-                  parentId={commentId}
-                />
-              </div>
-            )}
-          </div>
+              <ReplyButtonWithDropdown
+                nickname={nickname}
+                parentId={commentId}
+              />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* 자식 */}
       {children.length > 0 && <Children items={children} />}
     </li>
   );

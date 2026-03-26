@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignoreDependencies": ["prettier", "tailwindcss", "tw-animate-css"],
+  "ignore": [
+    "src/shared/components/shadcn/**",
+    "src/lib/api/fetchSchema.ts",
+    "src/lib/api/clientFetch.ts",
+    "src/lib/api/serverFetch.ts",
+    "src/lib/api/staticServerFetch.ts",
+    "src/lib/constants/cookies.ts",
+    "src/lib/constants/localstorages.ts",
+    "src/shared/module/cookieManager.ts",
+    "src/shared/module/postCache.ts"
+  ],
+  "rules": {
+    "exports": "warn",
+    "types": "warn"
+  }
+}

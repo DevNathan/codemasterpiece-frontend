@@ -1,16 +1,16 @@
 "use client";
 
 import React, {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  useCallback,
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePost } from "@/features/post/hook/usePost";
-import { postKeys, type ActorKey } from "@/features/post/queries/keys";
+import { type ActorKey, postKeys } from "@/features/post/queries/keys";
 import { useToggleLike } from "@/features/post/hook/useToggleLike";
 import { useViewOnVisible } from "@/features/post/hook/useViewOnVisible";
 import FrontPage from "@/features/post/ui/detail/element/FrontPage";
@@ -33,16 +33,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/shadcn/dialog";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2 } from "lucide-react";
 import { useAuth } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import deletePost from "@/features/post/api/deletePost";
 import DeletePostButton from "@/features/post/ui/detail/element/DeletePostButton";
 import MoreContentSection from "@/features/post/ui/detail/element/MoreContentSection";
+import { PostTocDTO } from "@/features/post/type/PostDetailDTO";
 
-type Props = { slug: string; actor: ActorKey };
+type Props = {
+  slug: string;
+  parsedHtml: string | null;
+  toc: PostTocDTO[];
+  actor: ActorKey;
+};
 
-export default function PostDetailView({ slug, actor }: Props) {
+export default function PostDetailView({
+  slug,
+  parsedHtml,
+  toc,
+  actor,
+}: Props) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const { data, isFetching } = usePost({ slug, actor });
@@ -111,7 +122,6 @@ export default function PostDetailView({ slug, actor }: Props) {
     categoryName,
     categoryLink,
     tags,
-    mainContent,
     updatedAt,
     morePosts,
   } = data;
@@ -135,7 +145,7 @@ export default function PostDetailView({ slug, actor }: Props) {
 
       <div className="max-w-[1200px] w-full mx-auto">
         <div className="relative">
-          <Content isPublished={published} mainContent={mainContent} />
+          <Content isPublished={published} parsedHtml={parsedHtml} toc={toc} />
 
           <AuthorBox className="m-4" />
 

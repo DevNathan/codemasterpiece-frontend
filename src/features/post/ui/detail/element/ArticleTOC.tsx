@@ -1,16 +1,21 @@
 "use client";
 
 import * as React from "react";
-import type { HeadingMeta } from "@/shared/components/markdown/HeadingContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/shadcn/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/shadcn/card";
 import { ScrollArea } from "@/shared/components/shadcn/scroll-area";
 import { Button } from "@/shared/components/shadcn/button";
 import { cn } from "@/lib/utils";
 import { Link as LinkIcon, ListTree } from "lucide-react";
 import { scrollToId } from "@/lib/scrollToId";
+import { PostTocDTO } from "@/features/post/type/PostDetailDTO";
 
 type Props = {
-  headings: HeadingMeta[];
+  headings: PostTocDTO[];
   activeId?: string;
   className?: string;
   title?: string;
@@ -21,12 +26,14 @@ export default function ArticleTOC({
   headings,
   activeId,
   className,
-  title = "이 페이지에서는...",
+  title = "이 게시글에서는...",
   stickyOffset = 72,
 }: Props) {
   if (!headings?.length) return null;
 
-  // 계층 넘버링 생성 (1, 1.1, 1.1.1 …)
+  /**
+   * 서버에서 추출된 평면적인 TOC 데이터를 기반으로 계층 넘버링(1, 1.1, 1.1.1)을 생성합니다.
+   */
   const numbered = React.useMemo(() => {
     const counters = [0, 0, 0, 0, 0, 0];
     return headings.map((h) => {
@@ -38,9 +45,12 @@ export default function ArticleTOC({
     });
   }, [headings]);
 
-  const onNavigate = React.useCallback((id: string) => {
-    scrollToId(id, stickyOffset);
-  }, []);
+  const onNavigate = React.useCallback(
+    (id: string) => {
+      scrollToId(id, stickyOffset);
+    },
+    [stickyOffset],
+  );
 
   const onCopyLink = React.useCallback(async (id: string) => {
     const url = new URL(window.location.href);
@@ -61,8 +71,8 @@ export default function ArticleTOC({
       }
       aria-label="Table of contents"
     >
-      <Card className="border-muted/50 bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75">
-        <CardHeader className="py-3 px-4 border-b bg-gradient-to-b from-background/60 to-transparent">
+      <Card className="border-muted/50 bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75 pt-0">
+        <CardHeader className="py-4 px-4 border-b bg-gradient-to-b from-background/60 to-transparent">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">
               {title}
@@ -96,7 +106,6 @@ export default function ArticleTOC({
                         isActive && "bg-muted/60 ring-1 ring-border",
                       )}
                     >
-                      {/* 좌측 depth 인디케이터 */}
                       <span
                         aria-hidden
                         className={cn(
@@ -104,7 +113,6 @@ export default function ArticleTOC({
                           isActive && "bg-foreground/70",
                         )}
                       />
-                      {/* 번호 + 텍스트 */}
                       <button
                         type="button"
                         onClick={() => onNavigate(h.id)}
@@ -121,7 +129,6 @@ export default function ArticleTOC({
                         <span className="flex-1">{h.text}</span>
                       </button>
 
-                      {/* 링크 복사 */}
                       <Button
                         type="button"
                         variant="ghost"

@@ -23,7 +23,13 @@ import { Kbd } from "@/shared/components/shadcn/kbd";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "next-themes";
-import { Home, LayoutDashboard, LogOut, PenSquare } from "lucide-react";
+import {
+  Home,
+  LayoutDashboard,
+  LogOut,
+  PenSquare,
+  RefreshCw,
+} from "lucide-react";
 import { SiGithub } from "react-icons/si";
 import {
   Select,
@@ -38,6 +44,8 @@ import {
   POINT_COLORS,
   usePointTheme,
 } from "@/contexts/PointThemeProvider";
+import { toast } from "sonner";
+import { clearAllCacheAction } from "@/features/post/action/cacheAction";
 
 type Props = { user: AppUser };
 
@@ -106,6 +114,17 @@ const UserDropdown = ({ user }: Props) => {
     window.addEventListener("keydown", handleKeyDown, { passive: false });
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  const handleClearCache = async () => {
+    try {
+      await clearAllCacheAction();
+      toast.success("서버 캐시가 완전히 초기화되었습니다.");
+      setOpen(false);
+    } catch (e) {
+      console.error("Cache Clear Error:", e);
+      toast.error("캐시 초기화 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -300,6 +319,24 @@ const UserDropdown = ({ user }: Props) => {
             </Select>
           </div>
         </div>
+
+        {isAuthor && (
+          <>
+            <DropdownMenuSeparator />
+            <div className="px-2.5 pt-2 pb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+              Management
+            </div>
+            <DropdownMenuGroup className="px-1 py-1">
+              <DropdownMenuItem
+                onClick={handleClearCache}
+                className="px-2.5 text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                전체 캐시 초기화
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
 
         <DropdownMenuSeparator />
 

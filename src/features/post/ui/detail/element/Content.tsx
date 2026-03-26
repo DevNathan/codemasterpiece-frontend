@@ -1,103 +1,107 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import PostMarkdownRenderer from "@/shared/components/markdown/PostMarkdownRenderer";
-import {
-  HeadingMeta,
-  HeadingProvider,
-} from "@/shared/components/markdown/HeadingContext";
-import ArticleTOC from "@/features/post/ui/detail/element/ArticleTOC";
+import React, { useEffect, useRef } from "react";
 import DraftBanner from "@/features/post/ui/detail/element/DraftBanner";
-import MobileTOC from "@/features/post/ui/detail/element/MobileTOC";
-import { slugifyId } from "@/lib/util/slugify";
-import remarkInlineFormats from "@/shared/components/markdown/remarkInlineFormats";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import { useImageViewer } from "@/contexts/ImageViewProvider";
+import ArticleTOC from "@/features/post/ui/detail/element/ArticleTOC";
+import {
+  cleanupImageFallback,
+  initImageFallback,
+} from "@/lib/markdown/imageFallback";
+import { handleCodeBlockCopy } from "@/lib/markdown/codeBlock";
+import MobileTOC from "@/features/post/ui/detail/element/MobileTOC";
+import { PostTocDTO } from "@/features/post/type/PostDetailDTO";
+import hljs from "highlight.js";
+import { renderMathInElement } from "@/lib/markdown/renderMath";
 
-type Props = { isPublished: boolean; mainContent: string };
-
-const Content = ({ isPublished, mainContent }: Props) => {
-  const contentKey = useMemo(() => hash(mainContent || ""), [mainContent]);
-  return (
-    <ContentInner
-      key={contentKey}
-      isPublished={isPublished}
-      mainContent={mainContent}
-    />
-  );
+type Props = {
+  isPublished: boolean;
+  parsedHtml: string | null;
+  toc?: PostTocDTO[];
 };
 
-function ContentInner({ isPublished, mainContent }: Props) {
-  const [headings, setHeadings] = useState<HeadingMeta[]>([]);
+const PureMarkdownRenderer = React.memo(({ html }: { html: string | null }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const idCounts = useMemo(() => new Map<string, number>(), []);
-  const seen = useMemo(() => new Set<string>(), []);
+  useEffect(() => {
+    if (!containerRef.current) return;
 
-  const ctxValue = useMemo(
-    () => ({
-      allocId: (txt: string) => {
-        const base = slugifyId(txt || "");
-        const n = (idCounts.get(base) ?? 0) + 1;
-        idCounts.set(base, n);
-        return n === 1 ? base : `${base}-${n}`;
-      },
-      register: (h: HeadingMeta) => {
-        if (!h.id || !h.text) return;
-        const k = `${h.depth}:${h.id}`;
-        if (seen.has(k)) return;
-        seen.add(k);
-        setHeadings((prev) => [...prev, h]);
-      },
-    }),
-    [idCounts, seen],
+    const codeBlocks = containerRef.current.querySelectorAll("pre code");
+    codeBlocks.forEach((block) => {
+      if (block.getAttribute("data-highlighted") === "yes") return;
+      hljs.highlightElement(block as HTMLElement);
+    });
+
+    renderMathInElement(containerRef.current);
+  }, [html]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="cm-markdown cm-codeblock"
+      dangerouslySetInnerHTML={{
+        __html: html || "<p>_작성된 내용이 없습니다._</p>",
+      }}
+    />
   );
+});
+PureMarkdownRenderer.displayName = "PureMarkdownRenderer";
 
-  // <br> 태그만 "강제 개행" 규칙에 맞게 변환
-  // 두 공백 + 개행 = 하드 브레이크
-  const normalizedContent = useMemo(
-    () => (mainContent || "").replace(/<br\s*\/?>/gi, "  \n"),
-    [mainContent],
-  );
+const Content = ({ isPublished, parsedHtml, toc = [] }: Props) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { open } = useImageViewer();
+  const openRef = useRef(open);
+
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    initImageFallback(container);
+
+    const handleContainerClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      if (target.tagName === "IMG") {
+        const img = target as HTMLImageElement;
+        openRef.current(img.src, img.alt || "Post Image");
+        return;
+      }
+
+      const copyBtn = target.closest(
+        ".cm-codeblock-copy-btn",
+      ) as HTMLButtonElement;
+      if (copyBtn) {
+        handleCodeBlockCopy(copyBtn);
+      }
+    };
+
+    container.addEventListener("click", handleContainerClick);
+
+    return () => {
+      container.removeEventListener("click", handleContainerClick);
+      cleanupImageFallback(container);
+    };
+  }, []);
 
   return (
     <div className="w-full py-8 md:py-10">
       {!isPublished && <DraftBanner />}
-
-      <MobileTOC headings={headings} />
-
+      <MobileTOC headings={toc} />
       <div className="px-4 block lg:grid-cols-[minmax(0,1fr)_280px] lg:grid gap-2">
-        <div id="post-content">
-          <HeadingProvider value={ctxValue}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath, remarkInlineFormats]}
-              rehypePlugins={[rehypeRaw, rehypeKatex]}
-              components={PostMarkdownRenderer}
-            >
-              {normalizedContent || "_작성된 내용이 없습니다._"}
-            </ReactMarkdown>
-          </HeadingProvider>
+        <div ref={contentRef}>
+          <PureMarkdownRenderer html={parsedHtml} />
         </div>
-
         <div className="hidden lg:block">
-          <ArticleTOC
-            headings={headings}
-            className="sticky top-16"
-            stickyOffset={100}
-          />
+          <ArticleTOC headings={toc} />
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Content;
-
-function hash(s: string) {
-  return Array.from(s)
-    .reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0)
-    .toString();
-}

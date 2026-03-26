@@ -1,0 +1,64 @@
+/* Base Style */
+.cm-admonition {
+    @apply my-6 border rounded-lg sm:px-4 px-2 pt-4 pb-3 bg-background/80 backdrop-blur border-border bg-muted/60;
+}
+
+.cm-admonition-title {
+    @apply text-[0.7rem] font-semibold uppercase tracking-wide mb-2;
+}
+
+.cm-admonition-title span {
+    @apply inline-flex rounded px-1.5 py-0.5 select-none bg-muted text-muted-foreground;
+}
+
+.cm-admonition-content {
+    @apply text-primary [&>p:first-child]:mt-0;
+}
+
+/* Important */
+.cm-admonition-important {
+    @apply border-point/60 bg-point/5;
+}
+
+.cm-admonition-important .cm-admonition-title span {
+    @apply bg-point/15 text-point;
+}
+
+/* Warning & Caution */
+.cm-admonition-warning, .cm-admonition-caution {
+    @apply border-amber-500/60 bg-amber-500/10;
+}
+
+.cm-admonition-warning .cm-admonition-title span,
+.cm-admonition-caution .cm-admonition-title span {
+    @apply bg-amber-500/20 text-amber-300;
+}
+
+/* Danger & Error */
+.cm-admonition-danger, .cm-admonition-error {
+    @apply border-red-500/60 bg-red-500/10;
+}
+
+.cm-admonition-danger .cm-admonition-title span,
+.cm-admonition-error .cm-admonition-title span {
+    @apply bg-red-500/20 text-red-300;
+}
+
+/* Tip */
+.cm-admonition-tip {
+    @apply border-emerald-500/60 bg-emerald-500/10;
+}
+
+.cm-admonition-tip .cm-admonition-title span {
+    @apply bg-emerald-500/20 text-emerald-300;
+}
+
+/* Note & Info */
+.cm-admonition-note, .cm-admonition-info {
+    @apply border-sky-500/60 bg-sky-500/10;
+}
+
+.cm-admonition-note .cm-admonition-title span,
+.cm-admonition-info .cm-admonition-title span {
+    @apply bg-sky-500/20 text-sky-300;
+}

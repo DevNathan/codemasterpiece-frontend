@@ -88,7 +88,7 @@ export default function VisitorChart({
           "h-auto",
         )}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="440">
           <AreaChart
             data={chartData}
             margin={{ left: 8, right: 12, top: 10, bottom: 0 }}

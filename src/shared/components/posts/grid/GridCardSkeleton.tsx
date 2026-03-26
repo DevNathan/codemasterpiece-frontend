@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 /** GridCard와 동일한 프레임/높이를 가진 스켈레톤 */
 type Props = { className?: string };
 
-export const GridCardSkeleton: React.FC<Props> = ({ className }) => {
+const GridCardSkeleton: React.FC<Props> = ({ className }) => {
   return (
     <AspectRatio ratio={4 / 5} className={cn("w-full", className)}>
       <div className="relative h-full w-full">

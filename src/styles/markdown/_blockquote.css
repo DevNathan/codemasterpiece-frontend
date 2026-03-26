@@ -1,0 +1,3 @@
+.cm-markdown blockquote {
+    @apply my-6 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm relative border-l-4 border-l-border/80;
+}

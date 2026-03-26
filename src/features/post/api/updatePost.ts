@@ -1,10 +1,10 @@
 import "client-only";
-import { clientFetchOrThrow, clientFetchWithForm } from "@/lib/api/clientFetch";
+import { clientFetchWithForm } from "@/lib/api/clientFetch";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 
-export type UpdatePostRequest = {
+type UpdatePostRequest = {
   title: string;
-  headImage: string | null; // 파일 ID 문자열 or null
+  headImage: string | null;
   headContent: string | null;
   tags: string[];
   categoryId: string;

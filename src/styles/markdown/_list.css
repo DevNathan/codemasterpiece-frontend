@@ -1,0 +1,11 @@
+.cm-markdown ul {
+    @apply my-6 ml-6 list-disc marker:text-muted-foreground space-y-2;
+}
+
+.cm-markdown ol {
+    @apply my-6 ml-6 list-decimal marker:text-muted-foreground space-y-2;
+}
+
+.cm-markdown li {
+    @apply leading-7;
+}

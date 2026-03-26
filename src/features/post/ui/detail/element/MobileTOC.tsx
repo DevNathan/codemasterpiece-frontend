@@ -1,23 +1,23 @@
 "use client";
 
 import React from "react";
-import type { HeadingMeta } from "@/shared/components/markdown/HeadingContext";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/shared/components/shadcn/dropdown-menu";
 import { Button } from "@/shared/components/shadcn/button";
 import { ScrollArea } from "@/shared/components/shadcn/scroll-area";
 import { ListTree } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { scrollToId } from "@/lib/scrollToId";
+import { PostTocDTO } from "@/features/post/type/PostDetailDTO";
 
 type Props = {
-  headings: HeadingMeta[];
+  headings: PostTocDTO[];
   className?: string;
 };
 
@@ -41,18 +41,13 @@ export default function MobileTOC({ headings, className }: Props) {
   };
 
   return (
-    <div
-      className={cn(
-        "lg:hidden fixed top-20 right-3 z-50",
-        className
-      )}
-    >
+    <div className={cn("lg:hidden fixed bottom-6 right-6 z-50", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             size="icon"
-            variant="secondary"
-            className="h-10 w-10 rounded-full shadow-md cursor-pointer"
+            variant="default"
+            className="h-12 w-12 rounded-full shadow-xl shadow-black/20 cursor-pointer"
             aria-label="Open table of contents"
           >
             <ListTree className="h-5 w-5" />
@@ -61,38 +56,38 @@ export default function MobileTOC({ headings, className }: Props) {
 
         <DropdownMenuContent
           align="end"
-          sideOffset={8}
-          className="w-72 p-0"
+          sideOffset={16}
+          className="w-[85vw] max-w-[320px] p-0"
         >
-          <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-            On this page
+          <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground py-3">
+            이 페이지에서는...
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
-          <ScrollArea className="max-h-[65vh]">
+          <ScrollArea className="max-h-[60vh]">
             <ul className="py-1">
               {numbered.map((h) => {
                 const depthClass =
                   h.depth === 1
-                    ? "pl-2 font-semibold"
+                    ? "pl-3 font-semibold"
                     : h.depth === 2
-                      ? "pl-4"
+                      ? "pl-5"
                       : h.depth === 3
-                        ? "pl-6"
-                        : "pl-8 text-muted-foreground";
+                        ? "pl-7"
+                        : "pl-9 text-muted-foreground";
                 return (
                   <li key={`${h.depth}-${h.id}`}>
                     <DropdownMenuItem
                       onClick={() => jump(h.id)}
                       className={cn(
-                        "cursor-pointer text-sm flex items-start gap-2",
-                        depthClass
+                        "cursor-pointer text-sm flex items-start gap-2 py-2.5", // 터치 영역(py-2.5) 확보
+                        depthClass,
                       )}
                     >
-                      <span className="min-w-[2rem] text-xs tabular-nums text-muted-foreground pt-0.5">
+                      <span className="min-w-[2.5rem] text-xs tabular-nums text-muted-foreground pt-0.5">
                         {h.label}.
                       </span>
-                      <span className="flex-1">{h.text}</span>
+                      <span className="flex-1 leading-snug">{h.text}</span>
                     </DropdownMenuItem>
                   </li>
                 );

@@ -6,6 +6,9 @@ import { siteMetadata } from "@/app/metadata";
 import PageViewBeacon from "@/features/analytics/api/PageViewBeacon";
 import { Abril_Fatface, Noto_Sans_KR, Roboto } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { WebVitals } from "@/shared/components/WebVitals";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   ...siteMetadata,
@@ -55,6 +58,10 @@ export default async function RootLayout({
           font-sans
         `}
       >
+        <Analytics />
+        <SpeedInsights />
+        <WebVitals />
+
         <NextTopLoader
           color="color-mix(in srgb, hsl(var(--point)), black 50%)"
           initialPosition={0.08}

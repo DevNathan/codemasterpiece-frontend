@@ -61,7 +61,7 @@ type KeepAliveOptions = {
 /**
  * 세션 상태 객체
  */
-export type SessionState = {
+type SessionState = {
   /**
    * 경고 상태 여부(세션 만료 임박)
    */

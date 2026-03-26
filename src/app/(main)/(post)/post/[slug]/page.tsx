@@ -4,11 +4,14 @@ import React from "react";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-
 import { getQueryClient } from "@/lib/getQueryClient";
 import { COOKIES } from "@/lib/constants/cookies";
 import getPostDetailServer from "@/features/post/api/getPostDetailServer";
-import { actorFrom, postKeys, type ActorKey } from "@/features/post/queries/keys";
+import {
+  actorFrom,
+  type ActorKey,
+  postKeys,
+} from "@/features/post/queries/keys";
 import PostDetailView from "@/features/post/ui/detail/PostDetailView";
 
 const SITE_URL = "https://codemasterpiece.com";
@@ -38,16 +41,22 @@ const snippet = (md: string, max = 160) => {
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const res = await getPostDetailServer(slug);
-    const p = res.data!;
-    const title = p.title;
-    const description = snippet(p.headContent || p.mainContent || "", 160);
+    // 단일 진실 공급원 타격: getPostDetailServer는 이제 DTO 자체를 반환한다.
+    const dto = await getPostDetailServer(slug);
+
+    const title = dto.title;
+    const rawTextForSnippet = dto.headContent || dto.mainContent || "";
+    const description = snippet(rawTextForSnippet, 160);
+
     const url = `${SITE_URL}/post/${encodeURIComponent(slug)}`;
     const ogImage =
-      abs(p.headImage) || `${SITE_URL}/api/og/post?title=${encodeURIComponent(p.title)}`;
+      abs(dto.headImage) ||
+      `${SITE_URL}/api/og/post?title=${encodeURIComponent(dto.title)}`;
 
     return {
       title,
@@ -62,9 +71,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         description,
         images: ogImage ? [{ url: ogImage }] : undefined,
         authors: [AUTHOR],
-        publishedTime: p.createdAt,
-        modifiedTime: p.updatedAt,
-        tags: p.tags,
+        publishedTime: dto.createdAt,
+        modifiedTime: dto.updatedAt,
+        tags: dto.tags,
       },
       twitter: {
         card: "summary_large_image",
@@ -72,8 +81,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         description,
         images: ogImage ? [ogImage] : undefined,
       },
-      robots: { index: p.published, follow: p.published },
-      other: { "article:category": p.categoryName },
+      robots: { index: dto.published, follow: dto.published },
+      other: { "article:category": dto.categoryName },
     };
   } catch {
     return {
@@ -89,23 +98,22 @@ export default async function Page({ params }: PageProps) {
 
   const cookieStore = await cookies();
   const hasSession = !!cookieStore.get(COOKIES.SESSION_ID)?.value;
-  const clientId   = cookieStore.get(COOKIES.CLIENT_ID)?.value;
-  const actor: ActorKey = actorFrom(hasSession, clientId); // ← 파생 식별자
+  const clientId = cookieStore.get(COOKIES.CLIENT_ID)?.value;
+  const actor: ActorKey = actorFrom(hasSession, clientId);
 
   const qc = getQueryClient();
 
-  let dto: Awaited<ReturnType<typeof getPostDetailServer>>["data"] | null = null;
   try {
-    const res = await getPostDetailServer(slug);
-    dto = res.data;
-    // 서버에서도 같은 키
-    qc.setQueryData(postKeys.detail({ slug, actor }), dto);
-  } catch {
-    notFound();
-  }
+    const dto = await getPostDetailServer(slug);
 
-  const jsonLd =
-    dto && {
+    if (!dto) notFound();
+
+    // 탠스택 쿼리 다이어트 (mainContent, toc는 캐시에서 덮어씌워져 있으므로 분리해서 버린다)
+    const { mainContent, toc, ...optimizedDto } = dto;
+    qc.setQueryData(postKeys.detail({ slug, actor }), optimizedDto);
+
+    const rawTextForSnippet = dto.headContent || dto.mainContent || "";
+    const jsonLd = {
       "@context": "https://schema.org",
       "@type": "Article",
       headline: dto.title,
@@ -122,20 +130,25 @@ export default async function Page({ params }: PageProps) {
         name: SITE_NAME,
         logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png` },
       },
-      description: snippet(dto.headContent || dto.mainContent || "", 200),
+      description: snippet(rawTextForSnippet, 200),
     };
 
-  return (
-    <HydrationBoundary state={dehydrate(qc)}>
-      {jsonLd && (
+    return (
+      <HydrationBoundary state={dehydrate(qc)}>
         <Script
           id="post-jsonld"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      )}
-      {/* actor를 안전하게 전달 */}
-      <PostDetailView slug={slug} actor={actor} />
-    </HydrationBoundary>
-  );
+        <PostDetailView
+          slug={slug}
+          parsedHtml={dto.mainContent}
+          toc={dto.toc}
+          actor={actor}
+        />
+      </HydrationBoundary>
+    );
+  } catch {
+    notFound();
+  }
 }

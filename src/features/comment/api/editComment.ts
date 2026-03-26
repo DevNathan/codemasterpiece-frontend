@@ -3,7 +3,7 @@ import { type FieldValues, type UseFormReturn } from "react-hook-form";
 import { clientFetchWithForm } from "@/lib/api/clientFetch";
 import { CommentDTO, CommentDTOSchema } from "@/features/comment/type/CommentDTO";
 
-export type EditCommentParams = {
+type EditCommentParams = {
   commentId: string;
   content: string;
   provider: "GITHUB" | "ANON";

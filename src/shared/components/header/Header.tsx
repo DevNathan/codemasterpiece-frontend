@@ -18,19 +18,8 @@ import MobileSearch from "@/shared/components/header/MobileSearch";
 import { cn } from "@/lib/utils";
 
 export default function Header() {
-  // 모바일 검색 모달(모바일 전용 단축키 '/')
+  // 모바일 검색 모달
   const [openSearch, setOpenSearch] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "/") {
-        e.preventDefault();
-        setOpenSearch(true);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
 
   return (
     <header className="fixed top-0 inset-x-0 z-40 h-12 md:h-14 bg-sidebar/95 backdrop-blur border-b border-border pt-[env(safe-area-inset-top)] transition-colors duration-500 root-header">

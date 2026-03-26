@@ -91,7 +91,7 @@ const FrontPage = ({
       : null;
 
   const scrollToContent = () => {
-    const content = document.getElementById("post-content");
+    const content = document.getElementById("markdown");
     if (content) content.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 

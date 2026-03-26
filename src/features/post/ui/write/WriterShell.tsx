@@ -1,12 +1,11 @@
-// features/post/ui/write/WriterShell.tsx
 "use client";
 
 import React, {
+  useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
-  useCallback,
-  useEffect,
 } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
@@ -21,16 +20,12 @@ import WriterForm from "@/features/post/ui/write/WriterForm";
 import LeaveConfirmDialog from "@/features/post/ui/write/LeaveConfirmDialog";
 import createPost from "@/features/post/api/createPost";
 import updatePost from "@/features/post/api/updatePost";
-import { slugifyId } from "@/lib/util/slugify";
-import {
-  HeadingMeta,
-  HeadingProvider,
-} from "@/shared/components/markdown/HeadingContext";
 import { useDraft } from "@/features/post/hook/useDraft";
 import { LocalStorage } from "@/shared/module/localStorage";
 import { LOCALS } from "@/lib/constants/localstorages";
 import { isSuccess } from "@/lib/api/clientFetch";
 import { formatKoreanDateTime } from "@/lib/util/timeFormatter";
+import { invalidatePostCacheAction } from "@/features/post/action/cacheAction";
 
 type PostFormValues = PostSchema & { headImagePreview?: string };
 
@@ -74,28 +69,8 @@ const WriterShell = () => {
   const postId = params?.id as string | undefined;
   const isEditMode = Boolean(postId);
 
-  const [headings, setHeadings] = useState<HeadingMeta[]>([]);
   const idCounts = useMemo(() => new Map<string, number>(), []);
   const seen = useMemo(() => new Set<string>(), []);
-
-  const ctxValue = useMemo(
-    () => ({
-      allocId: (txt: string) => {
-        const base = slugifyId(txt || "");
-        const n = (idCounts.get(base) ?? 0) + 1;
-        idCounts.set(base, n);
-        return n === 1 ? base : `${base}-${n}`;
-      },
-      register: (h: HeadingMeta) => {
-        if (!h.id || !h.text) return;
-        const k = `${h.depth}:${h.id}`;
-        if (seen.has(k)) return;
-        seen.add(k);
-        setHeadings((prev) => [...prev, h]);
-      },
-    }),
-    [idCounts, seen],
-  );
 
   const form = useForm<PostFormValues>({
     mode: "onChange",
@@ -187,12 +162,23 @@ const WriterShell = () => {
   );
 
   const isClickedFirst = useRef(false);
+
+  /* 사용자가 실제로 페이지를 이탈할 때 popstate 이벤트를 무시하기 위한 플래그입니다. */
+  const bypassTrap = useRef(false);
+
   const handlePopState = useCallback(() => {
+    /* 이탈이 확정된 상태라면, 추가적인 가드 로직을 실행하지 않고 통과시킵니다. */
+    if (bypassTrap.current) return;
+
     if (formDirty && !isSubmitting) {
       setPendingAction("back");
       setOpenLeaveDialog(true);
+      /* 사용자를 붙잡기 위해 가짜 상태를 history에 추가합니다. */
       history.pushState(null, "", "");
     } else {
+      /* 폼이 수정되지 않은 상태라도 가짜 상태(dummy)에서 뒤로 온 것이므로,
+         원래 페이지로 돌아가기 위해 한 번 더 뒤로가기를 실행합니다. */
+      bypassTrap.current = true;
       history.back();
     }
   }, [formDirty, isSubmitting]);
@@ -262,6 +248,12 @@ const WriterShell = () => {
         data: resData,
       } = res;
 
+      try {
+        await invalidatePostCacheAction(resData!.slug);
+      } catch (e) {
+        console.error("캐시 해제 중 오류가 발생했습니다.", e);
+      }
+
       toast.success(message, {
         description: formatKoreanDateTime(new Date(timestamp)),
       });
@@ -314,12 +306,12 @@ const WriterShell = () => {
     onTogglePublish: () =>
       form.setValue("published", !form.getValues("published")),
     onSubmitOverride: async (values) => {
-      await submitImpl(values as PostFormValues); // ← Promise<void> 보장
+      await submitImpl(values as PostFormValues);
     },
   });
 
   return (
-    <HeadingProvider value={ctxValue}>
+    <>
       <div className="w-full min-h-screen">
         <WriterToolbar
           isPublished={isPublished}
@@ -342,11 +334,18 @@ const WriterShell = () => {
         }}
         onConfirm={() => {
           setOpenLeaveDialog(false);
-          if (pendingAction === "back") history.back();
-          else router.push("/");
+          if (pendingAction === "back") {
+            bypassTrap.current = true;
+            window.history.back();
+            setTimeout(() => {
+              router.back();
+            }, 50);
+          } else {
+            router.push("/");
+          }
         }}
       />
-    </HeadingProvider>
+    </>
   );
 };
 
