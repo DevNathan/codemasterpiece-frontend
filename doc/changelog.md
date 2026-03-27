@@ -3,6 +3,10 @@
 ## [Unreleased]
 - 게시글 퀴즈 추가하기
 
+## [1.2.1] - 2026-03-27
+### Fixed
+- 누락 파일 추가
+
 ## [1.2.0] - 2026-03-27
 ### Added
 - **자동화 린팅 파이프라인 구축**: `eslint-plugin-unused-imports` 플러그인 도입으로 미사용 import 및 변수 자동 탐지/제거 파이프라인 구축 (`pnpm lint:fix`)
