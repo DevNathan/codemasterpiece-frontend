@@ -2,11 +2,13 @@
   "ignores": [
     "server-only",
     "client-only",
+    "postcss",
     "@tailwindcss/postcss",
     "tailwindcss",
     "tw-animate-css",
     "prettier",
     "patch-package",
-    "postinstall-postinstall"
+    "postinstall-postinstall",
+    "postcss"
   ]
 }

@@ -10,6 +10,8 @@ import EmptyState from "./_component/EmptyState";
 import ListContent from "./_component/ListContent";
 import PageSectionShell from "./_component/PageSectionShell";
 import PageSelector from "@/shared/components/pagination/PageSelector";
+import { LocalStorage } from "@/shared/module/localStorage";
+import { LOCALS } from "@/lib/constants/localstorages";
 
 type ViewMode = "grid" | "compact";
 
@@ -39,18 +41,16 @@ export default function PostPage() {
 
   // ===== View mode persist =====
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const storageKey = `posts:viewMode`;
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey) as ViewMode | null;
-      if (saved === "grid" || saved === "compact") setViewMode(saved);
-    } catch {}
+    const saved = LocalStorage.getItem<ViewMode>(LOCALS.POSTS_VIEW_MODE);
+    if (saved === "grid" || saved === "compact") {
+      setViewMode(saved);
+    }
   }, []);
+
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, viewMode);
-    } catch {}
+    LocalStorage.setItem(LOCALS.POSTS_VIEW_MODE, viewMode);
   }, [viewMode]);
 
   // ===== URL <-> page sync =====
@@ -60,7 +60,10 @@ export default function PostPage() {
     const p = Number(searchParams.get("p") ?? "1");
     if (!Number.isNaN(p) && p > 0 && p !== page) {
       setPage(p);
-      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      sectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [searchParams, page, setPage]);
 
@@ -117,16 +120,18 @@ export default function PostPage() {
       <ControlsBar
         sortKey={sortKey}
         sortDir={sortDir}
-        onChangeSortKey={setSortKey}
-        onChangeSortDir={setSortDir}
+        onChangeSortKeyAction={setSortKey}
+        onChangeSortDirAction={setSortDir}
         viewMode={viewMode}
-        onChangeViewMode={setViewMode}
+        onChangeViewModeAction={setViewMode}
         disabled={isRefreshing}
         keyword={keyword}
-        onSearch={handleSearch}
+        onSearchAction={handleSearch}
       />
 
-      {showSkeleton && <ListContent viewMode={viewMode} posts={[]} showSkeleton />}
+      {showSkeleton && (
+        <ListContent viewMode={viewMode} posts={[]} showSkeleton />
+      )}
 
       {showEmpty && <EmptyState />}
 
@@ -149,7 +154,10 @@ export default function PostPage() {
                 sp.set("p", String(p));
                 router.push(`?${sp.toString()}`, { scroll: false });
                 setPage(p);
-                sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                sectionRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
               }}
               shouldBePushed
               prefetch={prefetch}

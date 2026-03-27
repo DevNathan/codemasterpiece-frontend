@@ -3,7 +3,7 @@ import {
   EntryFormValues,
   EntrySchema,
 } from "@/features/guest/schemas/entrySchema";
-import { clientFetch, clientFetchWithForm } from "@/lib/api/clientFetch";
+import { clientFetchWithForm } from "@/lib/api/clientFetch";
 import { EntryDTO, EntryDTOSchema } from "@/features/guest/types/EntryDTO";
 import { Path, UseFormReturn } from "react-hook-form";
 

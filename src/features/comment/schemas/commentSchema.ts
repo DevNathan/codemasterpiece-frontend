@@ -54,7 +54,7 @@ const baseCommentSchema = z.object({
     ),
 });
 
-type BaseCommentSchema = z.infer<typeof baseCommentSchema>;
+// type BaseCommentSchema = z.infer<typeof baseCommentSchema>;
 
 /** provider 분기: GITHUB는 guest* 무시, ANON은 guest* 전부 필수 */
 export const makeCommentSchema = (provider: "ANON" | "GITHUB") =>

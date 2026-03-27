@@ -10,11 +10,6 @@ import React, {
 import { Separator } from "@/shared/components/shadcn/separator";
 import { Input } from "@/shared/components/shadcn/input";
 import { Button } from "@/shared/components/shadcn/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/components/shadcn/tooltip";
 import { Search, X } from "lucide-react";
 import SortControl from "./SortControl";
 import ViewModeControl from "./ViewModeControl";
@@ -26,32 +21,37 @@ type ViewMode = "grid" | "compact";
 type Props = {
   sortKey: SortKey;
   sortDir: SortDir;
-  onChangeSortKey: (v: SortKey) => void;
-  onChangeSortDir: (v: SortDir) => void;
+  onChangeSortKeyAction: (v: SortKey) => void;
+  onChangeSortDirAction: (v: SortDir) => void;
   viewMode: ViewMode;
-  onChangeViewMode: (v: ViewMode) => void;
+  onChangeViewModeAction: (v: ViewMode) => void;
   disabled?: boolean;
   keyword?: string;
-  onSearch?: (k: string) => void;
-  onKeywordChange?: (k: string) => void;
+  onSearchAction?: (k: string) => void;
+  onKeywordChangeAction?: (k: string) => void;
 };
 
 export default function ControlsBar({
   sortKey,
   sortDir,
-  onChangeSortKey,
-  onChangeSortDir,
+  onChangeSortKeyAction,
+  onChangeSortDirAction,
   viewMode,
-  onChangeViewMode,
+  onChangeViewModeAction,
   disabled = false,
   keyword = "",
-  onSearch,
-  onKeywordChange,
+  onSearchAction,
+  onKeywordChangeAction,
 }: Props) {
   const [value, setValue] = useState<string>(keyword ?? "");
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [prevKeyword, setPrevKeyword] = useState(keyword);
 
-  useEffect(() => setValue(keyword ?? ""), [keyword]);
+  if (keyword !== prevKeyword) {
+    setPrevKeyword(keyword);
+    setValue(keyword ?? "");
+  }
+
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const canSubmit = useMemo<boolean>(() => !disabled, [disabled]);
   const canClear = useMemo<boolean>(
@@ -61,16 +61,16 @@ export default function ControlsBar({
 
   const submit = useCallback((): void => {
     if (!canSubmit) return;
-    onSearch?.(value.trim());
-  }, [canSubmit, onSearch, value]);
+    onSearchAction?.(value.trim());
+  }, [canSubmit, onSearchAction, value]);
 
   const clear = useCallback((): void => {
     if (!canClear) return;
     setValue("");
-    onKeywordChange?.("");
-    onSearch?.("");
+    onKeywordChangeAction?.("");
+    onSearchAction?.("");
     inputRef.current?.focus();
-  }, [canClear, onKeywordChange, onSearch]);
+  }, [canClear, onKeywordChangeAction, onSearchAction]);
 
   // '/' focus, 'Esc' clear/blur
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function ControlsBar({
   }, [clear, disabled, value]);
 
   const onSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>): void => {
+    (e: React.SyntheticEvent<HTMLFormElement>): void => {
       e.preventDefault();
       submit();
     },
@@ -106,9 +106,9 @@ export default function ControlsBar({
     (e: React.ChangeEvent<HTMLInputElement>): void => {
       const next = e.target.value;
       setValue(next);
-      onKeywordChange?.(next);
+      onKeywordChangeAction?.(next);
     },
-    [onKeywordChange],
+    [onKeywordChangeAction],
   );
 
   return (
@@ -196,12 +196,12 @@ export default function ControlsBar({
               <SortControl
                 sortKey={sortKey}
                 sortDir={sortDir}
-                onChangeSortKey={onChangeSortKey}
-                onChangeSortDir={onChangeSortDir}
+                onChangeSortKey={onChangeSortKeyAction}
+                onChangeSortDir={onChangeSortDirAction}
               />
               <ViewModeControl
                 viewMode={viewMode}
-                onChangeViewMode={onChangeViewMode}
+                onChangeViewMode={onChangeViewModeAction}
               />
             </div>
           </div>

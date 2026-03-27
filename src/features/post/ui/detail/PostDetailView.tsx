@@ -2,10 +2,10 @@
 
 import React, {
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,6 +48,11 @@ type Props = {
   actor: ActorKey;
 };
 
+/**
+ * @component PostDetailView
+ * @description 게시글 상세 정보를 표시하는 메인 컨테이너 뷰입니다.
+ * React Compiler 최적화를 위해 동기적 상태 업데이트를 제거하고 하이드레이션 무결성을 확보했습니다.
+ */
 export default function PostDetailView({
   slug,
   parsedHtml,
@@ -55,10 +60,19 @@ export default function PostDetailView({
   actor,
 }: Props) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+
+  /**
+   * 클라이언트 환경 여부를 확인하기 위한 외부 스토어 동기화 훅입니다.
+   * useEffect 내부의 동기적인 setState 호출(Cascading Render)을 방지하고 하이드레이션 무결성을 확보합니다.
+   */
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   const { data, isFetching } = usePost({ slug, actor });
   const { isAuthor } = useAuth();
-  useEffect(() => setMounted(true), []);
 
   const queryKey = useMemo(
     () => postKeys.detail({ slug, actor }),
@@ -76,7 +90,7 @@ export default function PostDetailView({
   });
 
   const actionRef = useRef<Element | null>(null);
-  const enabledViewObserver = mounted && !!data?.postId;
+  const enabledViewObserver = isClient && !!data?.postId;
 
   useViewOnVisible(actionRef, {
     postId: data?.postId ?? "",
@@ -89,6 +103,11 @@ export default function PostDetailView({
   // 삭제 다이얼로그
   const [openDel, setOpenDel] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  /**
+   * 게시글 삭제 동작을 처리하는 함수입니다.
+   * React Compiler의 의존성 추론 방식에 맞추어 data 객체 전체를 의존성 배열에 주입합니다.
+   */
   const handleDelete = useCallback(async () => {
     if (!data?.postId) return;
     try {
@@ -106,9 +125,9 @@ export default function PostDetailView({
       toast.error(e?.message ?? "네트워크 오류가 발생했습니다.");
       setDeleting(false);
     }
-  }, [data?.postId, router]);
+  }, [data, router]);
 
-  if (!mounted || isFetching || !data) return <Loading />;
+  if (!isClient || isFetching || !data) return <Loading />;
 
   const {
     postId,
@@ -143,7 +162,7 @@ export default function PostDetailView({
         categoryLink={categoryLink}
       />
 
-      <div className="max-w-[1200px] w-full mx-auto">
+      <div className="max-w-300 w-full mx-auto">
         <div className="relative">
           <Content isPublished={published} parsedHtml={parsedHtml} toc={toc} />
 
@@ -187,7 +206,7 @@ export default function PostDetailView({
 
       {/* 삭제 확인 다이얼로그 */}
       <Dialog open={openDel} onOpenChange={setOpenDel}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-105">
           <DialogHeader>
             <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
             <DialogDescription>

@@ -1,4 +1,4 @@
-import { clientFetchOrThrow, clientFetchWithForm } from "@/lib/api/clientFetch";
+import { clientFetchWithForm } from "@/lib/api/clientFetch";
 import { PostSchema } from "@/features/post/schemas/postSchema";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 

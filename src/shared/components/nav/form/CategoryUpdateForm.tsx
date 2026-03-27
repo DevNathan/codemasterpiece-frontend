@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { PictureInPicture } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import updateCategory from "@/features/category/api/updateCategory";
@@ -33,12 +33,17 @@ import {
   type CategoryUpdateSchema,
 } from "@/features/category/schemas/categoryUpdateSchema";
 
+/**
+ * @component CategoryUpdateForm
+ * @description 기존 카테고리 정보를 수정하기 위한 폼 컴포넌트입니다.
+ * 렌더링 단계에서의 상태 제어와 이벤트 기반 업데이트를 통해 연쇄 렌더링을 원천 차단했습니다.
+ */
 export default function CategoryUpdateForm({
   category,
-  onSuccess,
+  onSuccessAction,
 }: {
   category: CategoryDTO;
-  onSuccess: () => void;
+  onSuccessAction: () => void;
 }) {
   const { invalidate } = useCategoryTree();
   const isLinkType = useMemo(() => category.type === "LINK", [category.type]);
@@ -47,28 +52,68 @@ export default function CategoryUpdateForm({
     mode: "onChange",
     resolver: zodResolver(categoryUpdateSchema),
     defaultValues: {
-      name: category.name ?? "", // 빈 문자열도 스키마에서 undefined로 정규화됨
+      name: category.name ?? "",
       link: category.link ?? "",
       image: null,
       removeImage: false,
     },
   });
 
-  // 미리보기: 신규 파일 > 기존 이미지 > 아이콘
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileValue = form.watch("image");
-  const removeImage = form.watch("removeImage") ?? false;
+  const [prevCategoryId, setPrevCategoryId] = useState(category.categoryId);
 
-  useEffect(() => {
-    if (fileValue instanceof File) {
-      const url = URL.createObjectURL(fileValue);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
+  /**
+   * 카테고리 전환 시 프리뷰를 초기화합니다.
+   * useEffect 대신 렌더링 단계에서 즉시 처리하여 Cascading Render를 방지합니다.
+   */
+  if (category.categoryId !== prevCategoryId) {
+    setPrevCategoryId(category.categoryId);
     setPreviewUrl(null);
-  }, [fileValue]);
+  }
 
-  // 카테고리 변경 시 상태 초기화
+  /** 이미지 삭제 여부 상태를 구독합니다. */
+  const removeImage =
+    useWatch({
+      control: form.control,
+      name: "removeImage",
+    }) ?? false;
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (file: File | null) => void,
+  ) => {
+    const file = e.target.files?.[0] ?? null;
+    onChange(file);
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  const handleRemoveImageChange = (checked: boolean) => {
+    form.setValue("removeImage", checked, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
+    if (checked) {
+      form.setValue("image", null, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+    }
+  };
+
   useEffect(() => {
     form.reset({
       name: category.name ?? "",
@@ -76,37 +121,38 @@ export default function CategoryUpdateForm({
       image: null,
       removeImage: false,
     });
-    setPreviewUrl(null);
-  }, [category.categoryId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [category, form]);
 
-  // link 소문자 보조
   const handleLinkInput = (v: string) => {
     const lower = v.toLowerCase();
     form.setValue("link", lower, { shouldDirty: true, shouldValidate: true });
   };
 
-  // 제출
   const [loading, setLoading] = useState(false);
-  const onSubmit = async (values: CategoryUpdateSchema) => {
-    setLoading(true);
 
-    const res = await updateCategory(form, category.categoryId, {
-      name: values.name || undefined,
-      link: isLinkType ? values.link || undefined : undefined, // FOLDER면 전송 안 함
-      image: values.removeImage ? null : values.image, // removeImage면 null
-      removeImage: values.removeImage ?? false,
-    });
+  const onSubmit = useCallback(
+    async (values: CategoryUpdateSchema) => {
+      setLoading(true);
 
-    setLoading(false);
+      const res = await updateCategory(form, category.categoryId, {
+        name: values.name || undefined,
+        link: isLinkType ? values.link || undefined : undefined,
+        image: values.removeImage ? null : values.image,
+        removeImage: values.removeImage ?? false,
+      });
 
-    if (!isSuccess(res)) {
-      toast.error(res.error.message);
-      return;
-    }
-    toast.success("카테고리가 수정되었습니다.");
-    invalidate();
-    onSuccess();
-  };
+      setLoading(false);
+
+      if (!isSuccess(res)) {
+        toast.error(res.error.message);
+        return;
+      }
+      toast.success("카테고리가 수정되었습니다.");
+      invalidate();
+      onSuccessAction();
+    },
+    [category.categoryId, isLinkType, form, invalidate, onSuccessAction],
+  );
 
   return (
     <>
@@ -116,10 +162,9 @@ export default function CategoryUpdateForm({
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={(e) => form.handleSubmit(onSubmit)(e)}
           className="space-y-6 mt-6 px-1 sm:px-0"
         >
-          {/* 이미지 업로드 영역 (LINK 타입 전용) */}
           {isLinkType && (
             <FormField
               control={form.control}
@@ -138,6 +183,7 @@ export default function CategoryUpdateForm({
                           width={24}
                           height={24}
                           className="object-contain w-6 h-6"
+                          unoptimized
                         />
                       ) : category.imagePath && !removeImage ? (
                         <Image
@@ -158,33 +204,20 @@ export default function CategoryUpdateForm({
                         accept="image/*"
                         className="text-sm file:text-sm h-10"
                         disabled={removeImage}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0] ?? null;
-                          field.onChange(f);
-                        }}
+                        onChange={(e) => handleFileChange(e, field.onChange)}
                       />
                     </FormControl>
                   </div>
 
-                  {/* 이미지 삭제 체크 */}
                   <div className="pt-2">
-                    <label className="flex items-center gap-2 text-sm">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
                         type="checkbox"
+                        className="cursor-pointer"
                         checked={removeImage}
-                        onChange={(e) => {
-                          form.setValue("removeImage", e.target.checked, {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          });
-                          if (e.target.checked) {
-                            form.setValue("image", null, {
-                              shouldDirty: true,
-                              shouldValidate: false,
-                            });
-                            setPreviewUrl(null);
-                          }
-                        }}
+                        onChange={(e) =>
+                          handleRemoveImageChange(e.target.checked)
+                        }
                       />
                       이미지 삭제
                     </label>
@@ -196,7 +229,6 @@ export default function CategoryUpdateForm({
             />
           )}
 
-          {/* 이름 */}
           <FormField
             control={form.control}
             name="name"
@@ -218,7 +250,6 @@ export default function CategoryUpdateForm({
             )}
           />
 
-          {/* 링크 (LINK 타입에만) */}
           {isLinkType && (
             <FormField
               control={form.control}
@@ -243,7 +274,6 @@ export default function CategoryUpdateForm({
             />
           )}
 
-          {/* 버튼 */}
           <DialogFooter className="pt-4 flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               type="submit"

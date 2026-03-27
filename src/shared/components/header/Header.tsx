@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import Logo from "@/shared/assets/logo/Logo";
 import { SidebarTrigger } from "@/shared/components/shadcn/sidebar";

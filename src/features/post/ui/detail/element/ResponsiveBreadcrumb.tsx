@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/shared/components/shadcn/breadcrumb";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/shared/components/shadcn/tooltip";
-import { useIsMobile } from "@/shared/hooks/use-mobile";
 
 type Props = {
   title: string;

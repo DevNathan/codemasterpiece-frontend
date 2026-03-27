@@ -91,15 +91,19 @@ const Content = ({ isPublished, parsedHtml, toc = [] }: Props) => {
   return (
     <div className="w-full py-8 md:py-10">
       {!isPublished && <DraftBanner />}
-      <MobileTOC headings={toc} />
       <div className="px-4 block lg:grid-cols-[minmax(0,1fr)_280px] lg:grid gap-2">
         <div ref={contentRef}>
           <PureMarkdownRenderer html={parsedHtml} />
         </div>
-        <div className="hidden lg:block">
-          <ArticleTOC headings={toc} />
-        </div>
+
+        {toc && toc.length > 0 && (
+          <div className="hidden lg:block">
+            <ArticleTOC headings={toc} />
+          </div>
+        )}
       </div>
+
+      {toc && toc.length > 0 && <MobileTOC headings={toc} />}
     </div>
   );
 };

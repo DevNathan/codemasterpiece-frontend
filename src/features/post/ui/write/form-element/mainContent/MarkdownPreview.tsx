@@ -17,6 +17,11 @@ interface MarkdownPreviewProps {
   isActive: boolean;
 }
 
+/**
+ * @component MarkdownPreview
+ * @description 입력된 마크다운을 서버에서 렌더링된 HTML로 변환하여 보여주는 프리뷰 컴포넌트입니다.
+ * 디바운싱(Debouncing)을 통해 서버 부하를 줄이고, 하이라이팅 및 수식 렌더링을 처리합니다.
+ */
 const MarkdownPreview = ({ markdown, isActive }: MarkdownPreviewProps) => {
   const [html, setHtml] = useState("");
   const [isPending, setIsPending] = useState(false);
@@ -24,47 +29,57 @@ const MarkdownPreview = ({ markdown, isActive }: MarkdownPreviewProps) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * 마크다운 입력값의 변화를 감지하고 서버에 프리뷰 요청을 보냅니다.
+   * Cascading Render 방지를 위해 초기화 로직을 비동기 흐름(timer) 내부로 이동했습니다.
+   */
   useEffect(() => {
-    // 입력값이 비어있을 경우 화면 및 캐시를 초기화
-    if (!markdown?.trim()) {
-      setHtml("");
-      lastFetched.current = "";
-      return;
-    }
-
-    // 컴포넌트가 비활성화 상태이거나 이전과 동일한 입력값일 경우 요청을 생략
-    if (!isActive) return;
-    if (markdown === lastFetched.current) return;
+    // 활성화 상태가 아니거나 이전과 동일한 값이면 무시 (빈 값 포함)
+    if (!isActive || markdown === lastFetched.current) return;
 
     const timer = setTimeout(async () => {
-      setIsPending(true);
-
-      const res = await previewPost(markdown);
-
-      if (isSuccess(res)) {
-        setHtml(res.data!.html);
-        lastFetched.current = markdown;
-      } else {
-        console.error("Markdown Preview Error: ", res.error);
+      // 입력값이 비어있을 경우 화면 및 캐시를 비동기적으로 초기화하여 연쇄 렌더링 방지
+      if (!markdown?.trim()) {
+        setHtml("");
+        lastFetched.current = "";
+        return;
       }
 
-      setIsPending(false);
+      setIsPending(true);
+
+      try {
+        const res = await previewPost(markdown);
+
+        if (isSuccess(res)) {
+          setHtml(res.data!.html);
+          lastFetched.current = markdown;
+        } else {
+          console.error("Markdown Preview Error: ", res.error);
+        }
+      } catch (err) {
+        console.error("Preview Network Error: ", err);
+      } finally {
+        setIsPending(false);
+      }
     }, 500);
 
     return () => clearTimeout(timer);
   }, [markdown, isActive]);
 
+  /**
+   * 렌더링된 HTML이 변경될 때 후처리(하이라이팅, 수식, 이미지 폴백 등)를 수행합니다.
+   */
   useEffect(() => {
     const container = containerRef.current;
     if (!html || !container || !isActive) return;
 
-    // 1. 이미지 로드 실패 대비 폴백 초기화
+    // 이미지 로드 실패 대비 폴백 초기화
     initImageFallback(container);
 
-    // 2. KaTeX 기반 수식 렌더링 처리
+    // KaTeX 기반 수식 렌더링 처리
     renderMathInElement(container);
 
-    // 3. Highlight.js 기반 코드 블록 구문 분석
+    // Highlight.js 기반 코드 블록 구문 분석
     container.querySelectorAll("pre code").forEach((block) => {
       if (block.getAttribute("data-highlighted") === "yes") return;
 

@@ -3,19 +3,25 @@
 ## [Unreleased]
 - 게시글 퀴즈 추가하기
 
-## [1.1.1] - 2026-03-27
+## [1.2.0] - 2026-03-27
+### Added
+- **자동화 린팅 파이프라인 구축**: `eslint-plugin-unused-imports` 플러그인 도입으로 미사용 import 및 변수 자동 탐지/제거 파이프라인 구축 (`pnpm lint:fix`)
+- **서버 모니터링 기반 구축**: 로드밸런서 및 외부 감시 도구 연동을 위한 Health Check 엔드포인트(`/api/health`) 추가
+
 ### Fixed
 - **메타데이터 증발 버그 해결**
-- **접근성 명도 대비(Contrast Ratio) 수정**: `CommentForm`의 방사형 그라데이션 아우라 투명도를 대폭 하향(30% -> 3%)하고 위치를 조정하여 텍스트 가독성 확보. `imageFallback` 및 각 폼의 텍스트 명도 대비 규격(WCAG) 충족
+- **접근성 명도 대비(Contrast Ratio) 수정**: `CommentForm`의 방사형 그라데이션 아우라와 텍스트 명도 대비 규격(WCAG) 충족
 - **시맨틱 구조(Hierarchy) 오류 수정**: `PolicyDialog` 내 시맨틱 요소 오남용(불필요한 `h3`, `h5` 태그 남발)을 다른 태그로 대체
+- **연쇄 렌더링(Cascading Render) 해결**: `CategoryUpdateForm`, `PolicyDialog`, `useTypeCycle`, `useTyping` 등 핵심 UI 및 커스텀 훅에서 발생하던 `useEffect` 기반의 강제 상태 동기화 로직을 렌더링 단계 상태 조정(Render-phase State Reset) 패턴으로 교체하여 에러 해결
 
 ### Changed
-- **레이아웃 메타데이터 마이그레이션**: `layout.tsx`에 하드코딩되어 있던 `<head>` 태그를 완전히 제거하고, 구글 사이트 소유권 인증 및 `color-scheme` 설정을 Next.js 네이티브 `Metadata` 및 `Viewport` API로 이주
+- **레이아웃 메타데이터 마이그레이션**: `layout.tsx`에 하드코딩되어 있던 `<head>` 태그 제거
 - **동적 텍스트 색상(Foreground) 시스템 도입**: 테마별 포인트 컬러(Amber, Sky, Purple) 변경 시 배경 명도에 맞춰 텍스트 색상이 자동으로 최적의 대비를 유지하도록 CSS 디자인 시스템(`--point-foreground`) 재설계 적용
 - **접근성(Accessibility) 속성 부여**: `SizeSelector` 등 스크린 리더가 인식하지 못하던 상호작용 요소들에 `aria-labelledby` 및 명시적 라벨 부여
+- **React 19 아키텍처 정규화**: 렌더링 단계에서의 불순한 함수 호출(`Math.random`) 및 Ref(`useRef`) 직접 접근을 이펙트 단계로 격리하여 컴파일러 엄격성(Purity) 규칙 준수
 
 ### Performance
-- **웹 성능 지표(Core Web Vitals) 최적화**: 메인 히어로 이미지의 `sizes` 속성 구체화 및 `TypingTitle`의 초기 텍스트 렌더링을 강제하여 LCP 속도 개선 및 CLS(누적 레이아웃 이동) 점수 완전 정상화.
+- **웹 성능 지표(Core Web Vitals) 최적화**: LCP 속도 개선 및 CLS(누적 레이아웃 이동) 점수 개선
 
 ## [1.1.0] - 2026-03-26
 ### Added

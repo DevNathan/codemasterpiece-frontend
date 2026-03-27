@@ -15,26 +15,19 @@ import { ListTree } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { scrollToId } from "@/lib/scrollToId";
 import { PostTocDTO } from "@/features/post/type/PostDetailDTO";
+import { useNumberedTOC } from "@/features/post/hook/useNumberedTOC";
 
 type Props = {
   headings: PostTocDTO[];
   className?: string;
 };
 
+/**
+ * @component MobileTOC
+ * @description 모바일 환경에서 사용되는 목차(Table of Contents) 컴포넌트입니다.
+ */
 export default function MobileTOC({ headings, className }: Props) {
-  if (!headings?.length) return null;
-
-  // 번호 생성 로직 (1, 1.1, 1.2.1 …)
-  const numbered = React.useMemo(() => {
-    const counters = [0, 0, 0, 0, 0, 0];
-    return headings.map((h) => {
-      const d = Math.min(Math.max(h.depth, 1), 6);
-      counters[d - 1] += 1;
-      for (let i = d; i < 6; i++) counters[i] = 0;
-      const label = counters.slice(0, d).filter(Boolean).join(".");
-      return { ...h, label };
-    });
-  }, [headings]);
+  const numbered = useNumberedTOC(headings);
 
   const jump = (id: string) => {
     scrollToId(id, 72);
@@ -84,7 +77,7 @@ export default function MobileTOC({ headings, className }: Props) {
                         depthClass,
                       )}
                     >
-                      <span className="min-w-[2.5rem] text-xs tabular-nums text-muted-foreground pt-0.5">
+                      <span className="min-w-10 text-xs tabular-nums text-muted-foreground pt-0.5">
                         {h.label}.
                       </span>
                       <span className="flex-1 leading-snug">{h.text}</span>

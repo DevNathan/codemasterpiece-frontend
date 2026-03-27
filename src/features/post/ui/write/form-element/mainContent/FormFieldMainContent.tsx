@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { useFormContext } from "react-hook-form";
 import {
@@ -25,10 +26,18 @@ import { useTheme } from "next-themes";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 
+/**
+ * @component FormFieldMainContent
+ * @description 게시글의 메인 본문(마크다운)을 편집하기 위한 폼 필드 컴포넌트입니다.
+ * 풀스크린 모드 및 실시간 프리뷰 기능을 지원합니다.
+ */
 const FormFieldMainContent = ({ className }: { className?: string }) => {
   const { control } = useFormContext();
   const [fullscreen, setFullscreen] = useState(false);
 
+  /**
+   * 풀스크린 모드 시 Escape 키를 통한 이탈 기능을 지원합니다.
+   */
   useEffect(() => {
     if (!fullscreen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -38,6 +47,9 @@ const FormFieldMainContent = ({ className }: { className?: string }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [fullscreen]);
 
+  /**
+   * 풀스크린 모드 시 문서 레벨의 스크롤을 차단합니다.
+   */
   useEffect(() => {
     if (!fullscreen) return;
     const el = document.documentElement;
@@ -85,13 +97,38 @@ const FormFieldMainContent = ({ className }: { className?: string }) => {
   );
 };
 
-function EditorShell({ value, onChange, fullscreen, setFullscreen }: any) {
+interface EditorShellProps {
+  value: string;
+  onChange: (value: string) => void;
+  fullscreen: boolean;
+  setFullscreen: (val: boolean) => void;
+}
+
+/**
+ * @component EditorShell
+ * @description 실제 CodeMirror 에디터와 툴바, 프리뷰 탭을 관리하는 내부 쉘 컴포넌트입니다.
+ */
+function EditorShell({
+  value,
+  onChange,
+  fullscreen,
+  setFullscreen,
+}: EditorShellProps) {
   const { theme, systemTheme } = useTheme();
   const { setCache, rewrite } = useImageTokenResolver();
 
   const viewRef = useRef<EditorView | null>(null);
-  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("write");
+
+  /**
+   * 클라이언트 환경 여부를 확인하기 위한 외부 스토어 동기화 훅입니다.
+   * useEffect 내부의 동기적인 setState 호출(Cascading Render)을 방지하여 하이드레이션 무결성을 확보합니다.
+   */
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const effective = (theme === "system" ? systemTheme : theme) ?? "light";
 
@@ -103,10 +140,14 @@ function EditorShell({ value, onChange, fullscreen, setFullscreen }: any) {
     [],
   );
 
-  useEffect(() => setMounted(true), []);
-
+  /**
+   * 현재 입력된 마크다운 본문의 토큰을 실제 URL로 치환한 프리뷰용 문자열을 생성합니다.
+   */
   const previewMarkdown = useMemo(() => rewrite(value), [value, rewrite]);
 
+  /**
+   * 에디터 내 특정 위치에 텍스트를 삽입하고 포커스를 유지합니다.
+   */
   const handleInsert = useCallback((before: string, after = "") => {
     const view = viewRef.current;
     if (!view) return;
@@ -125,6 +166,9 @@ function EditorShell({ value, onChange, fullscreen, setFullscreen }: any) {
     view.focus();
   }, []);
 
+  /**
+   * 현재 줄의 시작 부분에 접두사를 삽입합니다.
+   */
   const handleInsertBlock = useCallback((prefix: string) => {
     const view = viewRef.current;
     if (!view) return;
@@ -139,14 +183,15 @@ function EditorShell({ value, onChange, fullscreen, setFullscreen }: any) {
     view.focus();
   }, []);
 
-  if (!mounted)
-    return <div className="h-[600px] rounded-xl border bg-muted/20" />;
+  if (!isClient) {
+    return <div className="h-150 rounded-xl border bg-muted/20" />;
+  }
 
   return (
     <div
       className={cn(
         "rounded-xl border flex flex-col w-full bg-card overflow-hidden",
-        fullscreen ? "rounded-none flex-1 h-full" : "h-[600px] min-h-[500px]",
+        fullscreen ? "rounded-none flex-1 h-full" : "h-150 min-h-125",
       )}
     >
       <Tabs

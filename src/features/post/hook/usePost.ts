@@ -59,8 +59,7 @@ export function usePost(opts: UsePostOptions = {}) {
     queryFn: async () => {
       // 클라이언트는 무조건 본문을 제외(true)하고 가볍게 요청한다.
       const res = await getPostDetail(slug as string, true);
-      // 서버에서 null이나 빈 배열이 넘어와도 여기서 확실하게 찢어버린다.
-      const { mainContent, toc, ...clientData } = res.data!;
+      const { mainContent: _m, toc: _t, ...clientData } = res.data!;
       return clientData;
     },
     staleTime: staleTimeMs,
@@ -77,7 +76,7 @@ export function usePost(opts: UsePostOptions = {}) {
         queryKey: key,
         queryFn: async () => {
           const res = await getPostDetail(targetSlug, true);
-          const { mainContent, toc, ...clientData } = res.data!;
+          const { mainContent: _m, toc: _t, ...clientData } = res.data!;
           return clientData;
         },
         staleTime: staleTimeMs,

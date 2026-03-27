@@ -108,7 +108,7 @@ export default async function Page({ params }: PageProps) {
 
     if (!dto) notFound();
 
-    const { mainContent, toc, ...optimizedDto } = dto;
+    const { mainContent: _mainContent, toc: _toc, ...optimizedDto } = dto;
     qc.setQueryData(postKeys.detail({ slug, actor }), optimizedDto);
 
     const rawTextForSnippet = dto.headContent || dto.mainContent || "";

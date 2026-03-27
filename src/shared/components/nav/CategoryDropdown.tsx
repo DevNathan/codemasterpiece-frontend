@@ -127,7 +127,7 @@ export default function CategoryDropdown({ categoryId, categoryType, category }:
           {dialogType === "EDIT" && category && (
             <CategoryUpdateForm
               category={category}               // ✅ DTO 주입
-              onSuccess={() => {                // ✅ 저장 후 닫기
+              onSuccessAction={() => {                // ✅ 저장 후 닫기
                 setDialogOpen(false);
                 setDialogType(null);
               }}

@@ -3,7 +3,6 @@
 import React from "react";
 import { PostListDTO } from "@/features/post/type/PostListDTO";
 import ListCard from "@/shared/components/posts/list/ListCard";
-import { ListCardSkeleton } from "@/shared/components/posts/list/ListCardSkeleton";
 
 type Props = {
   posts: PostListDTO[];

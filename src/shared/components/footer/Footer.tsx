@@ -143,7 +143,7 @@ const Footer = () => {
       {/* 컨트롤드 정책 다이얼로그 */}
       <PolicyDialog
         open={policyOpen}
-        onOpenChange={setPolicyOpen}
+        onOpenChangeAction={setPolicyOpen}
         autoOpenIfNotAck={true}
       />
 

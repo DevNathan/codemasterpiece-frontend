@@ -22,7 +22,6 @@ const MyHoverCard: React.FC<{ className?: string; triggerLabel?: string }> = ({
     notion_url,
     bio,
     location,
-    blog,
   } = AUTHOR;
   const reduce = useReducedMotion();
 

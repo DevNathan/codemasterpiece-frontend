@@ -4,18 +4,18 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/shadcn/dialog";
 import Link from "next/link";
-import { Button } from "@/shared/components/shadcn/button";
 import { FaGithub } from "react-icons/fa";
 
 type Ctx = {
@@ -32,17 +32,26 @@ export function AuthDialogProvider({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [path, setPath] = useState<string>("/");
 
-  useEffect(() => {
-    setMounted(true);
+  const isClient = useSyncExternalStore(
+    () => () => {}, // 구독할 외부 저장소가 없으므로 빈 함수 반환
+    () => true, // 클라이언트 환경 스냅샷
+    () => false, // 서버 환경 스냅샷 (Hydration mismatch 방지)
+  );
+
+  /**
+   * @function openDialog
+   * @description 다이얼로그를 열기 직전에 현재 경로를 낚아챕니다.
+   * 불필요한 이펙트 동기화 대신, 실제 동작이 필요한 시점에 상태를 업데이트합니다.
+   */
+  const openDialog = useCallback(() => {
     const pathname = window.location.pathname || "/";
     const search = window.location.search || "";
     setPath(pathname + search);
+    setOpen(true);
   }, []);
 
-  const openDialog = useCallback(() => setOpen(true), []);
   const closeDialog = useCallback(() => setOpen(false), []);
 
   const ctx = useMemo<Ctx>(
@@ -51,7 +60,7 @@ export function AuthDialogProvider({
   );
 
   const base = process.env.NEXT_PUBLIC_API_DOMAIN ?? "";
-  const loginUrl = mounted
+  const loginUrl = isClient
     ? `${base}/oauth2/authorization/github?ruri=${encodeURIComponent(path)}`
     : `${base}/oauth2/authorization/github`;
 
@@ -64,9 +73,9 @@ export function AuthDialogProvider({
             <DialogTitle className="text-2xl font-bold tracking-tight">
               <span className="text-point">Code</span> Masterpiece
             </DialogTitle>
-            <p className="text-sm text-muted-foreground">
+            <DialogDescription className="text-sm text-muted-foreground">
               GitHub 계정으로 바로 시작하세요.
-            </p>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="mt-8 flex flex-col items-center gap-6">

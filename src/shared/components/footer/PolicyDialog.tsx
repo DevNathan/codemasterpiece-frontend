@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -21,51 +22,92 @@ const SESSION_LATCH_KEY = "policy_auto_open_latch";
 
 type Props = {
   open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  onOpenChangeAction?: (open: boolean) => void;
   autoOpenIfNotAck?: boolean;
 };
 
+/**
+ * @component PolicyDialog
+ * @description 사이트 정책 및 개인정보 처리방침을 안내하는 다이얼로그 컴포넌트입니다.
+ * React 19의 연쇄 렌더링 방지 규칙을 준수하여 렌더링 단계에서 쿠키 상태를 동기화합니다.
+ */
 export default function PolicyDialog({
   open,
-  onOpenChange,
+  onOpenChangeAction,
   autoOpenIfNotAck = true,
 }: Props) {
+  /**
+   * 클라이언트 환경 여부를 확인하기 위한 외부 스토어 동기화 훅입니다.
+   */
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   const alreadyAcked = useMemo(
-    () => CookieManager.getItem(COOKIES.POLICY_ACK) === "1",
-    [],
+    () =>
+      isClient ? CookieManager.getItem(COOKIES.POLICY_ACK) === "1" : false,
+    [isClient],
   );
 
   const sessionLatched = useMemo(
-    () => SessionStorage.getItem<boolean>(SESSION_LATCH_KEY) === true,
-    [],
+    () =>
+      isClient
+        ? SessionStorage.getItem<boolean>(SESSION_LATCH_KEY) === true
+        : false,
+    [isClient],
   );
 
   const isControlled = typeof open === "boolean";
-  const shouldAutoOpen = autoOpenIfNotAck && !alreadyAcked && !sessionLatched;
+  const shouldAutoOpen =
+    isClient && autoOpenIfNotAck && !alreadyAcked && !sessionLatched;
 
-  const [internalOpen, setInternalOpen] = useState<boolean>(
-    isControlled ? false : shouldAutoOpen,
-  );
+  const [internalOpen, setInternalOpen] = useState<boolean>(false);
   const shown = isControlled ? (open as boolean) : internalOpen;
+
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [prevShown, setPrevShown] = useState(shown);
+
+  /**
+   * 다이얼로그가 열릴 때 현재 쿠키 상태를 읽어와 체크박스와 동기화합니다.
+   * 연쇄 렌더링(Cascading Render)을 방지하기 위해 useEffect 대신 렌더링 단계에서 상태를 즉시 조정합니다.
+   */
+  if (shown !== prevShown) {
+    setPrevShown(shown);
+    if (shown && isClient) {
+      setDontShowAgain(CookieManager.getItem(COOKIES.POLICY_ACK) === "1");
+    }
+  }
 
   const handleClose = () => {
     if (dontShowAgain) {
       CookieManager.setItem(COOKIES.POLICY_ACK, "1", { maxAgeSec: ONE_YEAR });
+    } else {
+      /** 체크를 해제하고 닫을 경우 쿠키 수명을 0으로 설정하여 정책 동의를 파기합니다. */
+      CookieManager.setItem(COOKIES.POLICY_ACK, "", { maxAgeSec: 0 });
     }
-    SessionStorage.setItem(SESSION_LATCH_KEY, true); // 이번 세션엔 다시 안 띄움
 
-    if (isControlled) onOpenChange?.(false);
+    SessionStorage.setItem(SESSION_LATCH_KEY, true);
+
+    if (isControlled) onOpenChangeAction?.(false);
     else setInternalOpen(false);
   };
 
   useEffect(() => {
     if (!shouldAutoOpen) return;
-    SessionStorage.setItem(SESSION_LATCH_KEY, true); // 오픈했으니 래치 세팅
 
-    if (isControlled) onOpenChange?.(true);
-    else setInternalOpen(true);
-  }, [isControlled, onOpenChange, shouldAutoOpen]);
+    const timer = setTimeout(() => {
+      SessionStorage.setItem(SESSION_LATCH_KEY, true);
+      if (isControlled) {
+        onOpenChangeAction?.(true);
+      } else {
+        setInternalOpen(true);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [isControlled, onOpenChangeAction, shouldAutoOpen]);
 
   return (
     <Dialog
@@ -73,7 +115,7 @@ export default function PolicyDialog({
       onOpenChange={(v) =>
         v
           ? isControlled
-            ? onOpenChange?.(true)
+            ? onOpenChangeAction?.(true)
             : setInternalOpen(true)
           : handleClose()
       }
@@ -210,12 +252,12 @@ export default function PolicyDialog({
               </div>
               <p className="mt-2">
                 GitHub 이슈 또는{" "}
-                <a
+                <Link
                   href="/guest"
                   className="text-point underline underline-offset-[3px] hover:underline-offset-[5px] transition-all"
                 >
                   방명록
-                </a>
+                </Link>
                 으로 문의 바랍니다.
               </p>
             </section>

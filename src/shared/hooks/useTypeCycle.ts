@@ -78,18 +78,28 @@ export function useTypeCycle(
     delayMs,
   });
 
-  useEffect(() => {
-    if (phase === "typing") setDisplay(out);
-  }, [out, phase]);
+  /**
+   * 클라이언트 환경에서 현재 화면에 표시할 텍스트를 결정합니다.
+   * phase에 따라 출력 소스를 분리하여 렌더링 성능을 최적화합니다.
+   */
+  const text = useMemo(() => {
+    if (!prefersReduced && (phase === "typing" || phase === "hold")) {
+      return out;
+    }
+    return display;
+  }, [phase, out, display, prefersReduced]);
 
+  /** 1. 사이클 시작 제어 */
   useEffect(() => {
     if (!start || phase !== "idle") return;
 
     if (prefersReduced) {
-      setDisplay(current);
-      setPhase("hold");
+      const timer = setTimeout(() => {
+        setDisplay(current);
+        setPhase("hold");
+      }, 0);
 
-      const t = window.setInterval(() => {
+      const interval = window.setInterval(() => {
         setIndex((i) => {
           const next = (i + 1) % phrases.length;
           setDisplay(phrases[next] ?? "");
@@ -97,29 +107,41 @@ export function useTypeCycle(
         });
       }, holdMs + 600);
 
-      return () => window.clearInterval(t);
+      return () => {
+        clearTimeout(timer);
+        window.clearInterval(interval);
+      };
     }
 
-    setKickTyping(true);
-    setPhase("typing");
-  }, [start, phase, prefersReduced, phrases, current, holdMs]);
+    const timer = setTimeout(() => {
+      setKickTyping(true);
+      setPhase("typing");
+    }, 0);
 
+    return () => clearTimeout(timer);
+  }, [start, phase, prefersReduced, current, phrases, holdMs]);
+
+  /** 2. 타이핑 완료 후 대기 단계로 전환 */
   useEffect(() => {
     if (phase !== "typing" || !done) return;
     const t = window.setTimeout(() => setPhase("hold"), holdMs);
     return () => window.clearTimeout(t);
   }, [phase, done, holdMs]);
 
+  /** 3. 대기 완료 후 삭제 단계로 전환 */
   useEffect(() => {
-    if (phase !== "hold") return;
-    const t = window.setTimeout(() => setPhase("deleting"), gapMs);
+    if (phase !== "hold" || prefersReduced) return;
+
+    const t = window.setTimeout(() => {
+      setKickTyping(false);
+      setDisplay(current);
+      setPhase("deleting");
+    }, gapMs);
+
     return () => window.clearTimeout(t);
-  }, [phase, gapMs]);
+  }, [phase, gapMs, current, prefersReduced]);
 
-  useEffect(() => {
-    if (phase === "deleting") setKickTyping(false);
-  }, [phase]);
-
+  /** 4. 삭제 로직 처리 */
   useEffect(() => {
     if (phase !== "deleting") return;
 
@@ -140,7 +162,7 @@ export function useTypeCycle(
     );
 
     return () => clearTimeout(timer);
-  }, [phase, display.length, eraseMs, gapMs, phrases.length]);
+  }, [phase, display.length, eraseMs, gapMs, phrases]);
 
-  return { text: display, phase };
+  return { text, phase };
 }

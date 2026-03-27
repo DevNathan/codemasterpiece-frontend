@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /** ListCard와 동일한 프레임/높이를 가진 스켈레톤 */
 type Props = { className?: string };
 
-export const ListCardSkeleton: React.FC<Props> = ({ className }) => {
+const ListCardSkeleton: React.FC<Props> = ({ className }) => {
   return (
     <div
       className={cn(
@@ -19,7 +19,7 @@ export const ListCardSkeleton: React.FC<Props> = ({ className }) => {
       <div
         className="
           relative overflow-hidden rounded-md bg-muted
-          aspect-[16/9] w-full
+          aspect-video w-full
           sm:aspect-auto sm:h-28 sm:w-48
         "
       >
@@ -36,13 +36,13 @@ export const ListCardSkeleton: React.FC<Props> = ({ className }) => {
           </div>
 
           {/* 제목 2줄 영역 */}
-          <div className="flex min-h-[44px] flex-col gap-2">
+          <div className="flex min-h-11 flex-col gap-2">
             <Skeleton className="h-4 w-[80%]" />
             <Skeleton className="h-4 w-[60%]" />
           </div>
 
           {/* 요약 2줄 영역 */}
-          <div className="mt-1 flex min-h-[40px] flex-col gap-2">
+          <div className="mt-1 flex min-h-10 flex-col gap-2">
             <Skeleton className="h-4 w-[92%]" />
             <Skeleton className="h-4 w-[72%]" />
           </div>
@@ -50,15 +50,15 @@ export const ListCardSkeleton: React.FC<Props> = ({ className }) => {
           {/* 태그: 모바일 2개 + +N, sm 이상에서 다수 */}
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             {/* 공통 2개 */}
-            <Skeleton className="h-[20px] w-12 rounded-full" />
-            <Skeleton className="h-[20px] w-10 rounded-full" />
+            <Skeleton className="h-5 w-12 rounded-full" />
+            <Skeleton className="h-5 w-10 rounded-full" />
             {/* +N (모바일 전용) */}
-            <Skeleton className="h-[20px] w-10 rounded-full sm:hidden" />
+            <Skeleton className="h-5 w-10 rounded-full sm:hidden" />
             {/* sm 이상에서 많은 태그가 보이는 영역 대체 */}
             <div className="hidden items-center gap-1.5 sm:flex">
-              <Skeleton className="h-[20px] w-12 rounded-full" />
-              <Skeleton className="h-[20px] w-14 rounded-full" />
-              <Skeleton className="h-[20px] w-10 rounded-full" />
+              <Skeleton className="h-5 w-12 rounded-full" />
+              <Skeleton className="h-5 w-14 rounded-full" />
+              <Skeleton className="h-5 w-10 rounded-full" />
             </div>
           </div>
         </div>

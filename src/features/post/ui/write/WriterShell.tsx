@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,56 +15,17 @@ import LeaveConfirmDialog from "@/features/post/ui/write/LeaveConfirmDialog";
 import createPost from "@/features/post/api/createPost";
 import updatePost from "@/features/post/api/updatePost";
 import { useDraft } from "@/features/post/hook/useDraft";
-import { LocalStorage } from "@/shared/module/localStorage";
-import { LOCALS } from "@/lib/constants/localstorages";
 import { isSuccess } from "@/lib/api/clientFetch";
 import { formatKoreanDateTime } from "@/lib/util/timeFormatter";
 import { invalidatePostCacheAction } from "@/features/post/action/cacheAction";
 
 type PostFormValues = PostSchema & { headImagePreview?: string };
 
-type PreviewPayload = {
-  title: string;
-  headImage: string;
-  headContent: string;
-  viewCount: number;
-  likeCount: number;
-  commentCount: number;
-  published: boolean;
-  createdAt: string;
-  updatedAt: string;
-  tags: string[];
-  categoryName: string;
-  categoryLink: string;
-  mainContent: string;
-};
-
-function buildPreviewPayload(v: PostFormValues): PreviewPayload {
-  return {
-    title: v.title,
-    headImage: v.headImagePreview || "",
-    headContent: v.headContent,
-    viewCount: 0,
-    likeCount: 0,
-    commentCount: 0,
-    published: v.published ?? false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    tags: v.tags ?? [],
-    categoryName: "",
-    categoryLink: "",
-    mainContent: v.mainContent,
-  };
-}
-
 const WriterShell = () => {
   const router = useRouter();
   const params = useParams();
   const postId = params?.id as string | undefined;
   const isEditMode = Boolean(postId);
-
-  const idCounts = useMemo(() => new Map<string, number>(), []);
-  const seen = useMemo(() => new Set<string>(), []);
 
   const form = useForm<PostFormValues>({
     mode: "onChange",
@@ -87,10 +42,15 @@ const WriterShell = () => {
     },
   });
 
-  const { handleSubmit, formState, watch, reset, getValues, control } = form;
+  const { handleSubmit, formState, reset, getValues, control } = form;
   const formDirty = formState.isDirty;
-  const isPublished = watch("published");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isPublished = useWatch({
+    control,
+    name: "published",
+    defaultValue: false,
+  });
 
   // 초기 데이터 주입(수정 모드)
   usePostFormInit({ postId, isEditMode, reset });
@@ -114,46 +74,6 @@ const WriterShell = () => {
     if (isSubmitting) return;
     scheduleAutosave(allValues as PostFormValues, 1200);
   }, [allValues, isSubmitting, scheduleAutosave]);
-
-  // ── 프리뷰 브릿지 ───────────────────────────────────────────────
-  const previewUuidRef = useRef<string>("");
-  if (!previewUuidRef.current) previewUuidRef.current = crypto.randomUUID();
-
-  const previewKey = `${LOCALS.PREVIEW_POST_PREFIX}${previewUuidRef.current}`;
-  const channelName = `${LOCALS.PREVIEW_CHAN_PREFIX}${previewUuidRef.current}`;
-
-  const channelRef = useRef<BroadcastChannel | null>(null);
-  useEffect(() => {
-    if ("BroadcastChannel" in window) {
-      channelRef.current = new BroadcastChannel(channelName);
-    }
-    return () => {
-      try {
-        channelRef.current?.close();
-      } catch {}
-      channelRef.current = null;
-    };
-  }, [channelName]);
-
-  const previewDebRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const v = allValues as PostFormValues;
-    const payload = buildPreviewPayload(v);
-
-    if (previewDebRef.current) clearTimeout(previewDebRef.current);
-    previewDebRef.current = setTimeout(() => {
-      try {
-        channelRef.current?.postMessage({ type: "snapshot", payload });
-      } catch {}
-      try {
-        LocalStorage.setItem(previewKey, payload);
-      } catch {}
-    }, 200);
-
-    return () => {
-      if (previewDebRef.current) clearTimeout(previewDebRef.current);
-    };
-  }, [allValues, previewKey]);
 
   // ── 가드/네비 ───────────────────────────────────────────────────
   const [openLeaveDialog, setOpenLeaveDialog] = useState(false);
@@ -203,20 +123,8 @@ const WriterShell = () => {
     toast.success("임시 저장 완료.");
   };
 
-  const handlePreview = () => {
-    try {
-      const payload = buildPreviewPayload(getValues());
-      LocalStorage.setItem(previewKey, payload);
-    } catch {}
-    const url = `/preview?key=${encodeURIComponent(
-      previewKey,
-    )}&chan=${encodeURIComponent(channelName)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
   const submitImpl = async (data: PostFormValues): Promise<void> => {
     setIsSubmitting(true);
-    window.onbeforeunload = null;
 
     if (isEditMode) {
       const payload = {
@@ -239,7 +147,7 @@ const WriterShell = () => {
         toast.error(message, {
           description: formatKoreanDateTime(new Date(timestamp)),
         });
-        return; // ← 반환 타입 void 유지
+        return;
       }
 
       const {
@@ -272,7 +180,7 @@ const WriterShell = () => {
         toast.error(message, {
           description: formatKoreanDateTime(new Date(timestamp)),
         });
-        return; // ← 반환 타입 void 유지
+        return;
       }
 
       const {
@@ -302,7 +210,6 @@ const WriterShell = () => {
   // ── 단축키 연결 (충돌 없는 키 세트) ─────────────────────────────
   useKeyboardShortcuts(form, handleSubmit, router, {
     onDraft: () => handleDraft(),
-    onPreview: () => handlePreview(),
     onTogglePublish: () =>
       form.setValue("published", !form.getValues("published")),
     onSubmitOverride: async (values) => {
@@ -317,7 +224,6 @@ const WriterShell = () => {
           isPublished={isPublished}
           isEditMode={isEditMode}
           onDraft={handleDraft}
-          onPreview={handlePreview}
           onSubmit={handleSubmit(submitImpl)}
           onNavigateHome={handleNavigateHome}
         />

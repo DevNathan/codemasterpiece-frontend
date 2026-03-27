@@ -13,7 +13,7 @@ const GridCardSkeleton: React.FC<Props> = ({ className }) => {
   return (
     <AspectRatio ratio={4 / 5} className={cn("w-full", className)}>
       <div className="relative h-full w-full">
-        <div className="[perspective:900px] relative h-full">
+        <div className="perspective-[900px] relative h-full">
           {/* 3D 래퍼(스택 고립) */}
           <div
             className="relative h-full rounded-2xl isolate drop-shadow-sm"
@@ -22,7 +22,7 @@ const GridCardSkeleton: React.FC<Props> = ({ className }) => {
             {/* ambient glow */}
             <div
               aria-hidden
-              className="pointer-events-none absolute -inset-0.5 rounded-2xl z-[1]"
+              className="pointer-events-none absolute -inset-0.5 rounded-2xl z-1"
               style={{
                 transform: "translateZ(20px)",
                 maskImage:
@@ -35,7 +35,7 @@ const GridCardSkeleton: React.FC<Props> = ({ className }) => {
             {/* gradient ring */}
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-2xl z-[1]"
+              className="pointer-events-none absolute inset-0 rounded-2xl z-1"
               style={{
                 transform: "translateZ(18px)",
                 padding: "1px",
@@ -67,11 +67,11 @@ const GridCardSkeleton: React.FC<Props> = ({ className }) => {
 
                 {/* 하단 그라데이션 + 타이틀/시간 자리 */}
                 <div className="pointer-events-none absolute inset-x-0 bottom-0">
-                  <div className="h-20 bg-gradient-to-t from-background/85 to-transparent" />
+                  <div className="h-20 bg-linear-to-t from-background/85 to-transparent" />
                   <div className="absolute bottom-2 left-3 right-3">
                     <div className="flex items-end justify-between gap-3">
                       {/* 타이틀(2줄 높이 고정) */}
-                      <div className="flex min-h-[44px] w-full flex-col gap-2">
+                      <div className="flex min-h-11 w-full flex-col gap-2">
                         <Skeleton className="h-4 w-4/5" />
                         <Skeleton className="h-4 w-2/3" />
                       </div>
@@ -84,16 +84,16 @@ const GridCardSkeleton: React.FC<Props> = ({ className }) => {
               {/* 본문 */}
               <CardContent className="flex flex-1 flex-col gap-3 p-4">
                 {/* 요약(2줄 고정 높이) */}
-                <div className="min-h-[44px]">
+                <div className="min-h-11">
                   <Skeleton className="mb-2 h-4 w-[92%]" />
                   <Skeleton className="h-4 w-[70%]" />
                 </div>
 
                 {/* 태그 영역 (고정 높이 24px) */}
                 <div className="mt-0.5 h-6 flex items-center gap-1.5">
-                  <Skeleton className="h-[20px] w-12 rounded-full" />
-                  <Skeleton className="h-[20px] w-10 rounded-full" />
-                  <Skeleton className="h-[20px] w-14 rounded-full" />
+                  <Skeleton className="h-5 w-12 rounded-full" />
+                  <Skeleton className="h-5 w-10 rounded-full" />
+                  <Skeleton className="h-5 w-14 rounded-full" />
                 </div>
 
                 <div className="my-1 h-px w-full bg-border/70" />

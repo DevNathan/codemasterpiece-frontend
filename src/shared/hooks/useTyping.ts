@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 /**
  * useTyping
@@ -38,30 +44,42 @@ export function useTyping(
     delayMs?: number;
   },
 ): { out: string; done: boolean } {
+  const prefersReduced = useSyncExternalStore(
+    useCallback((callback: () => void) => {
+      const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      mediaQuery.addEventListener("change", callback);
+      return () => mediaQuery.removeEventListener("change", callback);
+    }, []),
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false, // 서버 사이드 기본값
+  );
+
   const [out, setOut] = useState("");
   const [done, setDone] = useState(false);
+
+  // 이전 인자값을 추적하여 상태 동기화(Reset) 여부를 판단합니다.
+  const [prevArgs, setPrevArgs] = useState({ text, start });
+
   const idxRef = useRef(0);
   const timerRef = useRef<number | null>(null);
   const startTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!start) return;
+  if (text !== prevArgs.text || start !== prevArgs.start) {
+    setPrevArgs({ text, start });
 
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-
-    // 항상 초기화
-    setOut("");
-    setDone(false);
-    idxRef.current = 0;
-
-    // 모션 최소화 모드면 즉시 완료 처리
-    if (prefersReduced) {
+    if (prefersReduced && start) {
       setOut(text);
       setDone(true);
-      return;
+    } else {
+      setOut("");
+      setDone(false);
     }
+  }
+
+  useEffect(() => {
+    idxRef.current = 0;
+
+    if (!start || prefersReduced) return;
 
     const tick = () => {
       const i = idxRef.current;
@@ -82,7 +100,7 @@ export function useTyping(
       if (startTimerRef.current) window.clearTimeout(startTimerRef.current);
       if (timerRef.current) window.clearTimeout(timerRef.current);
     };
-  }, [start, text, speedMs, delayMs]);
+  }, [start, text, speedMs, delayMs, prefersReduced]);
 
   return { out, done };
 }

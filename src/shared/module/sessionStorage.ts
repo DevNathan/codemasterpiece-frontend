@@ -17,7 +17,7 @@ class SessionStorage {
 
       try {
         return JSON.parse(storedValue) as T;
-      } catch (_) {
+      } catch {
         return storedValue as T;
       }
     }

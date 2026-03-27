@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useRef, useState, useEffect } from "react";
+import React, {
+  useCallback,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import Image from "next/image";
 import { useFormContext, useWatch } from "react-hook-form";
 import {
   FormControl,
@@ -24,15 +30,25 @@ import { formatKoreanDateTime } from "@/lib/util/timeFormatter";
 
 const MAX_MB = 5;
 
+/**
+ * @component FormFieldHeadImage
+ * @description 게시글의 메인 배너 이미지를 업로드하고 관리하는 폼 필드입니다.
+ */
 const FormFieldHeadImage = () => {
   const { control, setValue } = useFormContext();
   const previewUrl = useWatch({ control, name: "headImagePreview" }) || "";
   const [uploading, setUploading] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
 
-  // Hydration Mismatch 방지용 마운트 체크
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  /**
+   * 클라이언트 환경 여부를 확인하기 위한 외부 스토어 동기화 훅입니다.
+   * 기존 useEffect + setState 방식의 연쇄 렌더링 에러를 방지합니다.
+   */
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   return (
     <FormField
@@ -49,8 +65,7 @@ const FormFieldHeadImage = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    // 마운트 전에는 무조건 false로 고정하여 서버와 일치시킨다.
-                    disabled={mounted ? (!field.value && !previewUrl) : false}
+                    disabled={isClient ? !field.value && !previewUrl : false}
                     onClick={() => {
                       setValue("headImage", "", {
                         shouldDirty: true,
@@ -71,8 +86,12 @@ const FormFieldHeadImage = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  {/* 정적 비활성 버튼도 명시적으로 boolean 처리 */}
-                  <Button type="button" variant="outline" size="sm" disabled={true}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={true}
+                  >
                     <Images className="mr-1.5 size-4" />
                     기존 배너 선택
                   </Button>
@@ -104,11 +123,15 @@ const FormFieldHeadImage = () => {
           {previewUrl && (
             <div className="mt-3 overflow-hidden rounded-md border bg-muted/30">
               <AspectRatio ratio={16 / 9}>
-                <img
+                {/* Next.js 최적화를 위해 Image 컴포넌트를 사용합니다.
+                  프리뷰 특성상 외부 URL이 주입될 수 있으므로 unoptimized를 활성화했습니다.
+                */}
+                <Image
                   src={previewUrl}
                   alt="banner preview"
-                  className="h-full w-full object-cover"
-                  loading="lazy"
+                  fill
+                  className="object-cover"
+                  unoptimized
                 />
               </AspectRatio>
               <div className="flex items-center justify-end gap-2 p-2">
@@ -121,8 +144,7 @@ const FormFieldHeadImage = () => {
                       onClick={() =>
                         document.getElementById("head-image-input")?.click()
                       }
-                      // 마운트 체크 및 엄격한 불리언 변환
-                      disabled={mounted ? !!uploading : false}
+                      disabled={isClient ? uploading : false}
                     >
                       <Replace className="mr-1.5 size-4" />
                       교체
@@ -149,7 +171,6 @@ const FormFieldHeadImage = () => {
   );
 };
 
-// ... (HeadImageUploader 컴포넌트 생략 - 기존과 동일하게 유지하되 props에서 strict하게 처리)
 function HeadImageUploader({
   uploading,
   previewUrl,

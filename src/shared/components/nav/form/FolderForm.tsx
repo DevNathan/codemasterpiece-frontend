@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -31,6 +31,10 @@ type Props = {
   parentId?: string;
 };
 
+/**
+ * @component FolderForm
+ * @description 새로운 폴더 카테고리를 추가하기 위한 폼 컴포넌트입니다.
+ */
 const FolderForm = ({ parentId }: Props) => {
   const { invalidate } = useCategoryTree();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -43,35 +47,43 @@ const FolderForm = ({ parentId }: Props) => {
     },
   });
 
-  const onSubmit = async (data: FolderSchema) => {
-    const res = await createCategory(form, {
-      ...data,
-      type: "FOLDER",
-      parentId,
-    });
+  /**
+   * 폴더 생성 요청을 처리하는 비동기 함수입니다.
+   * useCallback을 사용하여 함수의 참조를 고정함으로써 의존성 무결성을 확보합니다.
+   */
+  const onSubmit = useCallback(
+    async (data: FolderSchema) => {
+      const res = await createCategory(form, {
+        ...data,
+        type: "FOLDER",
+        parentId,
+      });
 
-    if (!isSuccess(res)) {
+      if (!isSuccess(res)) {
+        const {
+          error: { message },
+          timestamp,
+        } = res;
+        return toast.error(message, {
+          description: formatKoreanDateTime(new Date(timestamp)),
+        });
+      }
       const {
-        error: { message },
+        detail: { message },
         timestamp,
       } = res;
-      return toast.error(message, {
+
+      invalidate();
+
+      toast.success(message, {
         description: formatKoreanDateTime(new Date(timestamp)),
       });
-    }
-    const {
-      detail: { message },
-      timestamp,
-    } = res;
 
-    invalidate();
-
-    toast.success(message, {
-      description: formatKoreanDateTime(new Date(timestamp)),
-    });
-
-    closeRef.current?.click();
-  };
+      // 폼 제출 성공 시 닫기 버튼을 클릭하여 다이얼로그를 닫습니다.
+      closeRef.current?.click();
+    },
+    [form, invalidate, parentId],
+  );
 
   return (
     <>
@@ -81,7 +93,7 @@ const FolderForm = ({ parentId }: Props) => {
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={(e) => form.handleSubmit(onSubmit)(e)}
           className="space-y-6 mt-6 px-1 sm:px-0"
         >
           <FormField

@@ -89,6 +89,7 @@ const FormFieldCategory = () => {
             tree={categoryTree}
             idMap={idMap}
             allLinks={allLinks}
+            currentId={currentId}
             onPick={(id) => {
               setValue("categoryId", id, {
                 shouldDirty: true,
@@ -100,7 +101,7 @@ const FormFieldCategory = () => {
       </FormControl>
       <div className="mt-2 flex items-center justify-between">
         {currentId && (
-          <Badge variant="secondary" className="max-w-[220px] truncate">
+          <Badge variant="secondary" className="max-w-55 truncate">
             {selectedPath[selectedPath.length - 1]}
           </Badge>
         )}
@@ -113,7 +114,6 @@ const FormFieldCategory = () => {
 export default FormFieldCategory;
 
 // ==== 트리 트리거 (버튼 + 팝오버 래퍼)
-// ==== 트리 트리거 (버튼 + 팝오버 래퍼) — 오버플로우 고정 버전
 function CategoryPickerTrigger({
   label,
   hasSelected,
@@ -131,7 +131,6 @@ function CategoryPickerTrigger({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      {/* 핵심: grid로 분리 + min-w-0 로 텍스트 수축 허용 */}
       <div className="grid w-full grid-cols-[1fr_auto] items-center gap-2">
         <PopoverTrigger asChild>
           <Button
@@ -165,9 +164,9 @@ function CategoryPickerTrigger({
         )}
       </div>
 
-      <PopoverContent className="w-[640px] p-0" align="start" sideOffset={8}>
+      <PopoverContent className="w-160 p-0" align="start" sideOffset={8}>
         {childEl && React.isValidElement(childEl)
-          ? React.cloneElement(childEl, { onClose: () => setOpen(false) })
+          ? React.cloneElement(childEl, {})
           : children}
       </PopoverContent>
     </Popover>
@@ -179,12 +178,14 @@ function CategoryTreePopoverContent({
   tree,
   idMap,
   allLinks,
+  currentId,
   onPick,
   onClose,
 }: {
   tree: CategoryDTO[];
   idMap: Map<string, CategoryDTO>;
   allLinks: Array<{ id: string; label: string; path: string[] }>;
+  currentId: string;
   onPick: (id: string) => void;
   onClose?: () => void;
 }) {
@@ -252,6 +253,7 @@ function CategoryTreePopoverContent({
           <Tree
             nodes={tree}
             expanded={expanded}
+            currentId={currentId}
             onToggle={toggle}
             onPickLink={handlePick}
           />
@@ -280,12 +282,14 @@ function CategoryTreePopoverContent({
 function Tree({
   nodes,
   expanded,
+  currentId,
   onToggle,
   onPickLink,
   depth = 0,
 }: {
   nodes: CategoryDTO[];
   expanded: Set<string>;
+  currentId: string;
   onToggle: (id: string) => void;
   onPickLink: (id: string) => void;
   depth?: number;
@@ -307,6 +311,8 @@ function Tree({
         .map((n) => {
           const isFolder = n.type === "FOLDER";
           const isOpen = expanded.has(n.categoryId);
+          const isSelected = currentId === n.categoryId;
+
           return (
             <li key={n.categoryId}>
               <div
@@ -315,9 +321,11 @@ function Tree({
                   isFolder
                     ? "cursor-pointer hover:bg-muted"
                     : "cursor-pointer hover:bg-primary/10",
+                  isSelected && "bg-primary/20 text-primary font-medium",
                 )}
                 role="treeitem"
                 aria-expanded={isFolder ? isOpen : undefined}
+                aria-selected={isSelected}
                 onClick={() =>
                   isFolder ? onToggle(n.categoryId) : onPickLink(n.categoryId)
                 }
@@ -354,6 +362,7 @@ function Tree({
                   <Tree
                     nodes={n.children}
                     expanded={expanded}
+                    currentId={currentId}
                     onToggle={onToggle}
                     onPickLink={onPickLink}
                     depth={depth + 1}

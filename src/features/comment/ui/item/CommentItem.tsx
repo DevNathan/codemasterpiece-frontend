@@ -65,7 +65,7 @@ export default function CommentItem({ comment }: { comment: CommentDTO }) {
         setRawContent(res.data);
         setEditing(true);
       }
-    } catch (error: any) {
+    } catch {
       toast.error("원본 데이터를 가져오지 못했습니다.");
     } finally {
       setIsFetchingRaw(false);

@@ -1,40 +1,54 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { InfiniteData, useInfiniteQuery, UseInfiniteQueryResult, useQueryClient } from "@tanstack/react-query";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+import {
+  InfiniteData,
+  useInfiniteQuery,
+  UseInfiniteQueryResult,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { getEntrySlice } from "@/features/guest/api/getEntrySlice";
 import { EntryDTO, EntryDTOSchema } from "@/features/guest/types/EntryDTO";
 import { SliceOfSchema } from "@/shared/type/SliceSchema";
 
-/** 단일 슬라이스 응답 타입 */
+/** 단일 슬라이스 응답 타입입니다. */
 type GuestbookSlice = SliceOfSchema<typeof EntryDTOSchema>;
-/** 무한 스크롤 데이터 타입 */
+/** 무한 스크롤 데이터 타입입니다. */
 type GuestbookInfiniteData = InfiniteData<GuestbookSlice, string | undefined>;
 
 /**
- * 방명록 컨텍스트 타입
+ * 방명록 컨텍스트가 제공하는 상태 및 제어 함수 인터페이스입니다.
  */
 type GuestbookContextType = {
-  /** 페이지 크기 */
+  /** 현재 요청된 페이지 크기입니다. */
   size: number;
-  /** 페이지 크기 변경 및 캐시 재설정 */
+  /** 페이지 크기를 변경하고 관련된 캐시를 초기화합니다. */
   setSize: (s: number) => void;
 
-  /** useInfiniteQuery 결과 객체 */
+  /** 무한 스크롤 조회를 위한 Query 객체입니다. */
   query: UseInfiniteQueryResult<GuestbookInfiniteData, Error>;
-  /** 평탄화된 엔트리 목록 */
+  /** 현재 로드된 모든 페이지의 방명록 데이터를 1차원 배열로 병합한 목록입니다. */
   items: EntryDTO[];
 
-  /** 다음 페이지 로드 */
+  /** 다음 페이지의 방명록 데이터를 요청합니다. */
   loadMore: () => Promise<void>;
-  /** 전체 리프레시(첫 페이지부터 재조회) */
+  /** 현재까지 로드된 캐시를 모두 제거하고 첫 페이지부터 다시 조회합니다. */
   refresh: () => Promise<void>;
-  /** 신규 엔트리 낙관적 prepend */
+  /** 새로운 방명록 작성 시 로컬 캐시 최상단에 데이터를 낙관적으로 추가합니다. */
   applyNewEntry: (entry: EntryDTO) => void;
+  /** 특정 방명록 데이터 수정 시 로컬 캐시를 갱신합니다. */
   updateEntry: (entry: EntryDTO) => void;
+  /** 특정 방명록 데이터 삭제 시 로컬 캐시에서 해당 항목을 제거합니다. */
   deleteEntryFromCache: (id: string) => void;
-  /** 관련 캐시 무효화 */
+  /** 방명록과 관련된 모든 쿼리 캐시를 무효화하여 서버와의 동기화를 유도합니다. */
   invalidate: () => Promise<void>;
 };
 
@@ -43,19 +57,16 @@ const GuestbookContext = createContext<GuestbookContextType | undefined>(
 );
 
 type GuestbookProviderProps = {
-  /** 초기 페이지 크기 (기본 20) */
+  /** 초기 요청 페이지 크기입니다. (기본값: 20) */
   initialSliceSize?: number;
-  /** 초기 활성화 여부 */
+  /** 초기 쿼리 활성화 여부입니다. (기본값: true) */
   enabled?: boolean;
-  /** 자식 노드 */
   children: ReactNode;
 };
 
 /**
- * 방명록 데이터 공급자
- * - 커서 기반 무한 스크롤(fetchNextPage)
- * - 신규 엔트리 낙관적 반영(applyNewEntry)
- * - 사이즈 변경 시 키 변경 및 캐시 리셋
+ * @component GuestbookProvider
+ * @description
  */
 export const GuestbookProvider = ({
   initialSliceSize = 20,
@@ -65,7 +76,7 @@ export const GuestbookProvider = ({
   const qc = useQueryClient();
   const [size, setSizeState] = useState<number>(initialSliceSize);
 
-  const queryKey = ["guestbook", "slice", size] as const;
+  const queryKey = useMemo(() => ["guestbook", "slice", size] as const, [size]);
 
   const fetchPage = useCallback(
     async (cursor?: string) => (await getEntrySlice(cursor, size)).data!,
@@ -151,7 +162,7 @@ export const GuestbookProvider = ({
 
         const newPages = old.pages.map((page) => {
           const newContent = page.content.map((e) =>
-            e.entryId === updated.entryId ? updated : e
+            e.entryId === updated.entryId ? updated : e,
           );
           return { ...page, content: newContent };
         });
@@ -178,7 +189,7 @@ export const GuestbookProvider = ({
         return { ...old, pages: updatedPages };
       });
     },
-    [qc, queryKey]
+    [qc, queryKey],
   );
 
   const invalidate = useCallback(
@@ -186,6 +197,10 @@ export const GuestbookProvider = ({
     [qc],
   );
 
+  /**
+   * 반환되는 컨텍스트 객체의 의존성 무결성을 보장합니다.
+   * 누락된 상태 업데이트 함수들을 포함하여 React Compiler의 최적화 조건을 충족합니다.
+   */
   const value = useMemo<GuestbookContextType>(
     () => ({
       size,
@@ -199,7 +214,18 @@ export const GuestbookProvider = ({
       deleteEntryFromCache,
       invalidate,
     }),
-    [size, setSize, query, items, loadMore, refresh, applyNewEntry, invalidate],
+    [
+      size,
+      setSize,
+      query,
+      items,
+      loadMore,
+      refresh,
+      applyNewEntry,
+      updateEntry,
+      deleteEntryFromCache,
+      invalidate,
+    ],
   );
 
   return (
@@ -210,8 +236,9 @@ export const GuestbookProvider = ({
 };
 
 /**
- * 방명록 컨텍스트 훅
- * @throws Error Provider 외부에서 호출 시
+ * @function useGuestbook
+ * @description 방명록 컨텍스트를 사용하기 위한 커스텀 훅입니다.
+ * @throws {Error} GuestbookProvider 외부에서 호출될 경우 예외를 발생시킵니다.
  */
 export const useGuestbook = () => {
   const ctx = useContext(GuestbookContext);

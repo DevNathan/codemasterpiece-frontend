@@ -1,5 +1,5 @@
 import "client-only";
-import { clientFetch, clientFetchWithForm } from "@/lib/api/clientFetch";
+import { clientFetchWithForm } from "@/lib/api/clientFetch";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 
 type UpdateCategoryParams = {

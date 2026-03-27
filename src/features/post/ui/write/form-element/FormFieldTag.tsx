@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import {
   FormControl,
   FormField,
@@ -19,22 +19,37 @@ const MAX_TAGS = 20;
 const MIN_LEN = 1;
 const MAX_LEN = 20;
 
+/**
+ * @component FormFieldTag
+ * @description 게시글의 태그를 입력하고 관리하는 폼 필드입니다.
+ * useMemo를 사용하여 태그 목록의 참조 무결성을 보장함으로써 불필요한 리렌더링과 의존성 재생성을 방지합니다.
+ */
 const FormFieldTag = () => {
-  const { control, watch, setValue } = useFormContext();
-  const tags = (watch("tags") as string[]) ?? [];
+  const { control, setValue } = useFormContext();
+
+  /** * useWatch로부터 태그 목록을 실시간으로 구독합니다.
+   * useMemo를 사용하여 빈 배열의 참조를 고정함으로써 useCallback 의존성 배열의 무결성을 유지합니다.
+   */
+  const watchedTags = useWatch({ control, name: "tags" }) as
+    | string[]
+    | undefined;
+  const tags = useMemo(() => watchedTags ?? [], [watchedTags]);
+
   const [tagInput, setTagInput] = useState("");
   const [hint, setHint] = useState<string | null>(null);
 
   const canAddMore = tags.length < MAX_TAGS;
 
-  const normalized = useMemo(
-    () => (s: string) => s.trim().replace(/\s+/g, "-"),
+  /** 입력된 태그 문자열을 정규화합니다(공백을 대시로 치환). */
+  const normalize = useCallback(
+    (s: string) => s.trim().replace(/\s+/g, "-"),
     [],
   );
 
+  /** 태그 목록에 새로운 태그를 추가합니다. */
   const addTag = useCallback(
     (raw: string) => {
-      const v = normalized(raw).toLowerCase();
+      const v = normalize(raw).toLowerCase();
       if (!v) return;
       if (!canAddMore) {
         setHint(`태그는 최대 ${MAX_TAGS}개까지.`);
@@ -59,9 +74,10 @@ const FormFieldTag = () => {
       setTagInput("");
       setHint(null);
     },
-    [tags, setValue, canAddMore, normalized],
+    [tags, setValue, canAddMore, normalize],
   );
 
+  /** 선택된 태그를 목록에서 제거합니다. */
   const removeTag = useCallback(
     (t: string) => {
       setValue(
@@ -144,9 +160,7 @@ const FormFieldTag = () => {
   );
 };
 
-export default FormFieldTag;
-
-/** 단일 태그 뱃지 (디테일 업) */
+/** 단일 태그 표시를 위한 뱃지 컴포넌트입니다. */
 function TagBadge({ text, onRemove }: { text: string; onRemove: () => void }) {
   return (
     <Badge
@@ -157,7 +171,7 @@ function TagBadge({ text, onRemove }: { text: string; onRemove: () => void }) {
         "hover:bg-muted/60 transition-colors",
       )}
     >
-      <span className="text-foreground/90">#{text}</span>
+      <span className="text-foreground/90"># {text}</span>
       <button
         type="button"
         onClick={onRemove}
@@ -174,3 +188,5 @@ function TagBadge({ text, onRemove }: { text: string; onRemove: () => void }) {
     </Badge>
   );
 }
+
+export default FormFieldTag;

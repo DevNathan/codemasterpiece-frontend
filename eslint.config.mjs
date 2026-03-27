@@ -1,26 +1,10 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
 import unusedImports from "eslint-plugin-unused-imports";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const nextConfig = compat.extends("next/core-web-vitals");
-
-for (const config of nextConfig) {
-  if (config.plugins && config.plugins.react && config.plugins.react.configs) {
-    delete config.plugins.react.configs;
-  }
-}
-
-// 3. 최종 무장 완료
-export default [
-  ...nextConfig,
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
   {
     plugins: {
       "unused-imports": unusedImports,
@@ -39,4 +23,6 @@ export default [
       ],
     },
   },
-];
+]);
+
+export default eslintConfig;

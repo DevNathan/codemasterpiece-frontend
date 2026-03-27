@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo, useCallback, useSyncExternalStore } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { useAuth } from "@/contexts/UserContext";
 import { Form } from "@/shared/components/shadcn/form";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatKoreanDateTime } from "@/lib/util/timeFormatter";
-
 import { useAnonPref } from "@/shared/hooks/useAnonPref";
 import AuthHeader from "@/shared/components/commentParts/AuthHeader";
 import AnonBadge from "@/shared/components/commentParts/AnonBadge";
@@ -18,7 +16,6 @@ import NicknameInput from "@/shared/components/commentParts/NicknameInput";
 import PinInput from "@/shared/components/commentParts/PinInput";
 import ContentEditor from "@/shared/components/commentParts/ContentEditor";
 import SubmitBar from "@/shared/components/commentParts/SubmitBar";
-
 import {
   EntrySchema,
   makeEntrySchema,
@@ -47,20 +44,28 @@ const findAvatarIndex = (url?: string | null) => {
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @component EntryForm
+ * @description 방명록 작성을 위한 폼 컴포넌트입니다. 인증 여부에 따라 입력 필드를 동적으로 전환합니다.
+ */
 export default function EntryForm() {
   const { user, isAuthenticated } = useAuth();
   const provider: "ANON" | "GITHUB" = isAuthenticated ? "GITHUB" : "ANON";
 
   const { applyNewEntry } = useGuestbook();
 
-  // 클라 프리퍼런스
   const [anonPref, saveAnonPref] = useAnonPref(avatarOptions.length);
 
-  // 하이드레이션 플래그
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  /**
+   * 클라이언트 환경 여부를 확인하기 위한 외부 스토어 동기화 훅입니다.
+   * useEffect 내부의 동기적인 setState 호출(Cascading Render)을 방지하고 Hydration 무결성을 확보합니다.
+   */
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
-  // 스키마 / 기본값
   const schema = useMemo(() => makeEntrySchema(provider), [provider]);
 
   const defaultValues = useMemo<EntrySchema>(() => {
@@ -81,12 +86,16 @@ export default function EntryForm() {
     defaultValues,
   });
 
-  // provider가 바뀌면 공통 안전 초기값으로 리셋(SSR/CSR 불일치 방지)
+  /**
+   * 인증 상태(provider)가 변경될 경우 폼을 초기화합니다.
+   */
   useEffect(() => {
     form.reset(defaultValues);
-  }, [provider, defaultValues]);
+  }, [provider, defaultValues, form]);
 
-  // 하이드레이션 이후, ANON일 때만 로컬 프리퍼런스 주입
+  /**
+   * 클라이언트 환경에서 익명 사용자의 로컬 설정(이름, 아바타)을 폼에 주입합니다.
+   */
   useEffect(() => {
     if (!hydrated || provider !== "ANON") return;
     const name = anonPref.name?.trim() ?? "";
@@ -97,10 +106,15 @@ export default function EntryForm() {
       guestImageUrl: avatar,
       guestPin: "",
     } as EntrySchema);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, provider, anonPref.avatarIndex, anonPref.name]);
+  }, [hydrated, provider, anonPref.avatarIndex, anonPref.name, form]);
 
-  const avatarSelected = form.watch("guestImageUrl");
+  /**
+   * React Compiler 최적화 누락 방지를 위해 form.watch 대신 useWatch를 사용합니다.
+   */
+  const avatarSelected = useWatch({
+    control: form.control,
+    name: "guestImageUrl",
+  });
 
   const persistAnonPref = useCallback(
     (values: EntrySchema) => {
@@ -109,7 +123,6 @@ export default function EntryForm() {
       const avatarIndex = findAvatarIndex(avatar);
       saveAnonPref({ name, avatarIndex });
 
-      // 프리퍼런스 반영한 상태로 폼 초기화
       form.reset({
         content: "",
         guestDisplayName: name,
@@ -128,7 +141,6 @@ export default function EntryForm() {
     async (values: EntrySchema) => {
       const res = await createEntry(form, values);
 
-      // 실패: validation은 이미 RHF로 세팅됨. 그 외만 토스트.
       if (!isSuccess(res)) {
         if (res.error.code !== "error.validation") {
           toast.error(res.error.message, {
@@ -138,7 +150,6 @@ export default function EntryForm() {
         return;
       }
 
-      // 성공
       const { data, detail, timestamp } = res;
       applyNewEntry(data!);
 
@@ -161,8 +172,8 @@ export default function EntryForm() {
         className={cn(
           "relative overflow-hidden rounded-2xl border border-border/60 bg-background/70 backdrop-blur-xl",
           "shadow-[0_10px_40px_rgba(0,0,0,0.15)] ring-1 ring-black/5",
-          "before:absolute before:inset-[-2px] before:-z-10 before:rounded-[20px]",
-          "before:bg-[radial-gradient(120%_120%_at_0%_0%,theme(colors.point/30),transparent_55%)]",
+          "before:absolute before:-inset-0.5 before:-z-10 before:rounded-[20px]",
+          "before:bg-[radial-gradient(200%_150%_at_0%_0%,var(--color-point),transparent_30%)] opacity-80",
           "after:pointer-events-none after:absolute after:inset-0 after:rounded-[20px] after:ring-1 after:ring-white/5",
         )}
       >
@@ -211,7 +222,7 @@ export default function EntryForm() {
           <SubmitBar submitting={form.formState.isSubmitting} />
         </form>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-point/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-point/60 to-transparent" />
       </div>
     </Form>
   );

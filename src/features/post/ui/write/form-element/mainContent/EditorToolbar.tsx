@@ -80,7 +80,7 @@ const EditorToolbar = ({
           id: tid,
           description: `${file.name} — ${formatKoreanDateTime(new Date(timestamp))}`, //
         });
-      } catch (err) {
+      } catch {
         toast.error("업로드 실패", { id: tid });
       } finally {
         setHint(null);

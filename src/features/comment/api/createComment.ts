@@ -1,6 +1,6 @@
 import "client-only";
 import { CommentSchema } from "@/features/comment/schemas/commentSchema";
-import { clientFetchOrThrow, clientFetchWithForm } from "@/lib/api/clientFetch";
+import { clientFetchWithForm } from "@/lib/api/clientFetch";
 import {
   CommentDTO,
   CommentDTOSchema,

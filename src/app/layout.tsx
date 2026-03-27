@@ -4,7 +4,7 @@ import React, { Suspense } from "react";
 import Providers from "@/app/providers";
 import { siteMetadata } from "@/app/metadata";
 import PageViewBeacon from "@/features/analytics/api/PageViewBeacon";
-import { Abril_Fatface, Noto_Sans_KR, Roboto } from "next/font/google";
+import { Roboto } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { WebVitals } from "@/shared/components/WebVitals";
 import { Analytics } from "@vercel/analytics/react";

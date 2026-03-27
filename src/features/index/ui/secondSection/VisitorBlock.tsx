@@ -1,6 +1,11 @@
 "use client";
 
-import { ReactNode, useMemo, useState } from "react";
+import React, {
+  ReactNode,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import dynamic from "next/dynamic";
 import { formatISO, subDays } from "date-fns";
 import {
@@ -11,7 +16,6 @@ import {
   Triangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 import { Button } from "@/shared/components/shadcn/button";
 import {
   Card,
@@ -20,7 +24,6 @@ import {
   CardTitle,
 } from "@/shared/components/shadcn/card";
 import { Calendar } from "@/shared/components/shadcn/calendar";
-
 import {
   Popover,
   PopoverContent,
@@ -32,7 +35,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/shadcn/dropdown-menu";
-
 import type { DateRange } from "react-day-picker";
 import { useVisitorsQuery } from "@/features/analytics/hooks/useVisitorQuery";
 import { saveAsCsv } from "@/features/analytics/utils/copyAsCsv";
@@ -49,12 +51,27 @@ const DEFAULT_RANGE_BY_PERIOD: Record<Period, number> = {
   month: 180,
 };
 
+/**
+ * @component VisitorsBlock
+ * @description 사이트의 방문자 통계 데이터를 시각화하여 보여주는 블록 컴포넌트입니다.
+ */
 export function VisitorsBlock() {
   const [period, setPeriod] = useState<Period>("day");
   const [theme, setTheme] = useState<"pastel" | "bold" | "neon">("pastel");
 
-  const today = new Date();
-  const initialFrom = subDays(today, DEFAULT_RANGE_BY_PERIOD[period] - 1);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  const today = useMemo(() => new Date(), []);
+
+  const initialFrom = useMemo(
+    () => subDays(today, DEFAULT_RANGE_BY_PERIOD[period] - 1),
+    [today, period],
+  );
+
   const [range, setRange] = useState<DateRange>({
     from: initialFrom,
     to: today,
@@ -67,7 +84,7 @@ export function VisitorsBlock() {
       fromISO: formatISO(from, { representation: "date" }),
       toISO: formatISO(to, { representation: "date" }),
     };
-  }, [range, period]);
+  }, [range, initialFrom, today]);
 
   const { data, isLoading, isFetching, isError, refetch, totals, prevDelta } =
     useVisitorsQuery({
@@ -76,17 +93,21 @@ export function VisitorsBlock() {
       to: toISO,
     });
 
+  if (!isClient) {
+    return <section className="min-h-dvh w-full bg-background" />;
+  }
+
   return (
     <section
       className={cn(
-        "relative w-full min-h-[100dvh] py-20",
+        "relative w-full min-h-dvh py-20",
         "grid place-items-center",
-        "border-t border-border/60 bg-gradient-to-br from-background/40 to-muted/40",
+        "border-t border-border/60 bg-linear-to-br from-background/40 to-muted/40",
       )}
     >
       {/* 배경 오로라 + 라이트 그리드 */}
       <BackdropAura />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.03] [background-image:linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] [background-size:40px_40px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] bg-size-[40px_40px]" />
 
       <div className="relative z-10 w-full p-6 overflow-hidden">
         <div
@@ -102,7 +123,7 @@ export function VisitorsBlock() {
             <h1
               className={cn(
                 "text-2xl sm:text-4xl font-black tracking-tight",
-                "bg-gradient-to-r from-[hsl(var(--point))] via-foreground to-foreground/70 bg-clip-text text-transparent",
+                "bg-linear-to-r from-point via-foreground to-foreground/70 bg-clip-text text-transparent",
               )}
             >
               트래픽 인사이트
@@ -191,7 +212,7 @@ export function VisitorsBlock() {
                     테마
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[140px]">
+                <DropdownMenuContent align="end" className="min-w-35">
                   <DropdownMenuItem onClick={() => setTheme("pastel")}>
                     pastel
                   </DropdownMenuItem>
@@ -260,7 +281,7 @@ export function VisitorsBlock() {
           </div>
 
           {/* ====== Chart Card ====== */}
-          <Card className="shadow-xl backdrop-blur supports-[backdrop-filter]:bg-background/60 border-border/60">
+          <Card className="shadow-xl backdrop-blur supports-backdrop-filter:bg-background/60 border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
                 사이트 방문자 수
@@ -273,8 +294,7 @@ export function VisitorsBlock() {
               {isError ? (
                 <ErrorBanner>데이터를 불러오지 못했습니다.</ErrorBanner>
               ) : (
-                // 고정 높이 금지. 너비 기반 반응형 비율 + 극단 가드.
-                <div className="w-full aspect-[4/3] md:aspect-[16/9] min-h-[220px] max-h-[480px]">
+                <div className="w-full aspect-4/3 md:aspect-video min-h-55 max-h-120">
                   <VisitorChart period={period} series={data ?? []} />
                 </div>
               )}
@@ -309,7 +329,7 @@ function GlassBar({
     <div
       className={cn(
         "rounded-2xl p-2 border border-border/60",
-        "bg-card/60 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md",
+        "bg-card/60 backdrop-blur supports-backdrop-filter:backdrop-blur-md",
         "shadow-[0_8px_30px_-12px_rgba(0,0,0,0.35)]",
         className,
       )}
@@ -389,11 +409,11 @@ function KpiCard({
   return (
     <div
       className={cn(
-        "relative rounded-2xl p-[1px]",
-        "bg-gradient-to-br from-[hsl(var(--point))/60] via-border to-transparent",
+        "relative rounded-2xl p-px",
+        "bg-linear-to-br from-[hsl(var(--point))/60] via-border to-transparent",
       )}
     >
-      <Card className="rounded-2xl border-border/60 bg-card/70 backdrop-blur supports-[backdrop-filter]:backdrop-blur-md">
+      <Card className="rounded-2xl border-border/60 bg-card/70 backdrop-blur supports-backdrop-filter:backdrop-blur-md">
         <CardContent className="py-4">
           <div className="text-xs uppercase tracking-wide text-muted-foreground">
             {title}

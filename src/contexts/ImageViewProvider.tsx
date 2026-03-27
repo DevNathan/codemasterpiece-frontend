@@ -1,4 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
+
+/**
+ * @file ImageViewProvider.tsx
+ * @description 전역으로 사용할 수 있는 이미지 뷰어(Lightbox) 컨텍스트 및 프로바이더입니다.
+ */
 
 import React, {
   createContext,
@@ -10,6 +16,10 @@ import React, {
 } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * @interface ImageViewerCtx
+ * @description 이미지 뷰어 컨텍스트가 제공하는 상태 및 제어 함수 규격입니다.
+ */
 type ImageViewerCtx = {
   src: string | null;
   alt: string;
@@ -19,6 +29,7 @@ type ImageViewerCtx = {
 
 const Ctx = createContext<ImageViewerCtx | null>(null);
 
+// 확대/축소 비율 상수 정의
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 4;
 const STEP = 0.25;
@@ -28,19 +39,27 @@ export const ImageViewerProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  // --- 상태(State) 관리 ---
+  // 이미지 소스, 대체 텍스트, 확대 비율 등 UI 갱신이 필수적인 요소만 React State로 관리합니다.
   const [src, setSrc] = useState<string | null>(null);
   const [alt, setAlt] = useState("");
-
   const [scale, setScale] = useState(1);
-  const scaleRef = useRef(1); // 이벤트 리스너에서 최신 scale 값을 참조하기 위한 Ref
 
-  // 리액트 리렌더링 지옥을 피하기 위해 X, Y 좌표는 상태가 아닌 Ref로 관리합니다.
+  // 이벤트 리스너 내부에서 최신 scale 값을 참조하기 위한 Ref입니다.
+  const scaleRef = useRef(1);
+
+  // --- 비상태(Ref) 관리 (성능 최적화 핵심) ---
+  // 위치 이동(Translate) 좌표입니다. React State로 관리할 경우 마우스 이동 시마다
+  // 리렌더링이 발생하여 랙(인풋 랙)이 발생하므로, Ref에 값을 저장합니다.
   const translateRef = useRef({ x: 0, y: 0 });
+
+  // 직접 CSS transform을 주입할 대상 이미지 엘리먼트 참조입니다.
   const imgRef = useRef<HTMLImageElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const draggingRef = useRef(false);
 
+  // 드래그 시작 시점의 마우스 포인터 좌표 및 이미지의 원래 위치를 저장합니다.
   const dragStartRef = useRef<{
     x: number;
     y: number;
@@ -48,66 +67,97 @@ export const ImageViewerProvider = ({
     ty: number;
   } | null>(null);
 
-  const open = useCallback((s: string, a: string) => {
-    setSrc(s);
-    setAlt(a);
+  /**
+   * @function applyTransform
+   * @description React 렌더링 사이클을 거치지 않고, 브라우저 DOM에 직접 transform 속성을 적용합니다.
+   * @param {boolean} animate - true일 경우 부드러운 전환(transition) 효과를 추가합니다.
+   */
+  const applyTransform = useCallback((animate: boolean) => {
+    if (!imgRef.current) return;
+    imgRef.current.style.transition = animate
+      ? "transform 120ms ease-out"
+      : "none";
+    imgRef.current.style.transform = `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scaleRef.current})`;
+  }, []);
+
+  /**
+   * @function resetTransform
+   * @description 뷰어의 이동 좌표 및 확대 비율을 초기화합니다.
+   */
+  const resetTransform = useCallback(() => {
     setScale(1);
     scaleRef.current = 1;
     translateRef.current = { x: 0, y: 0 };
     setIsDragging(false);
     draggingRef.current = false;
+    applyTransform(false);
+  }, [applyTransform]);
 
-    if (typeof document !== "undefined") {
-      document.body.style.overflow = "hidden";
-    }
-  }, []);
+  /**
+   * @function open
+   * @description 이미지 뷰어를 활성화하고 배경 스크롤을 차단합니다.
+   */
+  const open = useCallback(
+    (s: string, a: string) => {
+      setSrc(s);
+      setAlt(a);
+      resetTransform();
 
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = "hidden";
+      }
+    },
+    [resetTransform],
+  );
+
+  /**
+   * @function close
+   * @description 이미지 뷰어를 비활성화하고 배경 스크롤 차단을 해제합니다.
+   */
   const close = useCallback(() => {
     setSrc(null);
     setAlt("");
-    setScale(1);
-    scaleRef.current = 1;
-    translateRef.current = { x: 0, y: 0 };
-    setIsDragging(false);
-    draggingRef.current = false;
+    resetTransform();
 
     if (typeof document !== "undefined") {
       document.body.style.overflow = "";
     }
-  }, []);
+  }, [resetTransform]);
 
+  /**
+   * @function zoomIn / zoomOut / resetZoom
+   * @description 이미지 확대/축소를 제어합니다. 상태 갱신 후 DOM에 즉각 반영(applyTransform)합니다.
+   */
   const zoomIn = useCallback(() => {
     setScale((prev) => {
       const next = Math.min(MAX_SCALE, prev + STEP);
       scaleRef.current = next;
+      applyTransform(true);
       return next;
     });
-  }, []);
+  }, [applyTransform]);
 
   const zoomOut = useCallback(() => {
     setScale((prev) => {
       const next = Math.max(MIN_SCALE, prev - STEP);
       scaleRef.current = next;
+      applyTransform(true);
       return next;
     });
-  }, []);
+  }, [applyTransform]);
 
   const resetZoom = useCallback(() => {
-    setScale(1);
-    scaleRef.current = 1;
-    translateRef.current = { x: 0, y: 0 };
-    // 이미지가 패닝된 상태에서 scale이 이미 1이라면 리렌더링이 발생하지 않으므로 직접 DOM을 리셋합니다.
-    if (imgRef.current) {
-      imgRef.current.style.transform = `translate3d(0px, 0px, 0) scale(1)`;
-    }
-  }, []);
+    resetTransform();
+    applyTransform(true);
+  }, [resetTransform, applyTransform]);
 
-  // 키보드 핸들링 (+ / - / 0 / Esc)
+  // 키보드 단축키 이벤트 리스너 바인딩
   useEffect(() => {
     if (!src) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
+      // 입력창(Input, Textarea) 내부에서의 키 입력은 무시합니다.
       if (
         t &&
         (t.tagName === "INPUT" ||
@@ -150,6 +200,10 @@ export const ImageViewerProvider = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [src, close, zoomIn, zoomOut, resetZoom]);
 
+  /**
+   * @function handleWheel
+   * @description 마우스 휠 이벤트로 줌 인/아웃을 처리합니다.
+   */
   const handleWheel: React.WheelEventHandler<HTMLImageElement> = (e) => {
     e.preventDefault();
     if (e.deltaY < 0) {
@@ -159,74 +213,49 @@ export const ImageViewerProvider = ({
     }
   };
 
-  const handleMouseDown: React.MouseEventHandler<HTMLImageElement> = (e) => {
-    if (e.button !== 0) return;
+  /**
+   * @function startDrag
+   * @description 마우스 및 터치 이벤트 발생 시 드래그 시작 좌표를 기록합니다.
+   */
+  const startDrag = (clientX: number, clientY: number) => {
     draggingRef.current = true;
-    setIsDragging(true); // 커서 스타일 및 transition 변경을 위해 1회 렌더링을 유발합니다.
+    setIsDragging(true);
     dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
+      x: clientX,
+      y: clientY,
       tx: translateRef.current.x,
       ty: translateRef.current.y,
     };
+  };
+
+  const handleMouseDown: React.MouseEventHandler<HTMLImageElement> = (e) => {
+    if (e.button !== 0) return;
+    startDrag(e.clientX, e.clientY);
   };
 
   const handleTouchStart: React.TouchEventHandler<HTMLImageElement> = (e) => {
     if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    draggingRef.current = true;
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: t.clientX,
-      y: t.clientY,
-      tx: translateRef.current.x,
-      ty: translateRef.current.y,
-    };
+    startDrag(e.touches[0].clientX, e.touches[0].clientY);
   };
 
-  // 전역 move/up 리스너 (드래그 중 DOM 직접 조작)
+  // 마우스 및 터치 이동(드래그) 이벤트 바인딩
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
+    const doMove = (clientX: number, clientY: number) => {
       if (!draggingRef.current || !dragStartRef.current) return;
-      e.preventDefault();
 
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
+      // 마우스 포인터의 이동량(Delta)을 계산합니다.
+      const dx = clientX - dragStartRef.current.x;
+      const dy = clientY - dragStartRef.current.y;
 
+      // 이동량을 초기 위치에 더해 최종 좌표를 도출합니다.
       translateRef.current.x = dragStartRef.current.tx + dx;
       translateRef.current.y = dragStartRef.current.ty + dy;
 
-      // 리액트를 거치지 않고 DOM을 직접 수정하여 60fps를 방어합니다.
-      if (imgRef.current) {
-        imgRef.current.style.transform = `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scaleRef.current})`;
-      }
+      // 브라우저의 기본 렌더링 속도에 맞춰 즉각적으로 DOM을 업데이트합니다.
+      applyTransform(false);
     };
 
-    const onMouseUp = () => {
-      if (draggingRef.current) {
-        draggingRef.current = false;
-        setIsDragging(false); // 드래그 종료 시 1회 렌더링
-        dragStartRef.current = null;
-      }
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!draggingRef.current || !dragStartRef.current) return;
-      if (e.touches.length !== 1) return;
-
-      const t = e.touches[0];
-      const dx = t.clientX - dragStartRef.current.x;
-      const dy = t.clientY - dragStartRef.current.y;
-
-      translateRef.current.x = dragStartRef.current.tx + dx;
-      translateRef.current.y = dragStartRef.current.ty + dy;
-
-      if (imgRef.current) {
-        imgRef.current.style.transform = `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scaleRef.current})`;
-      }
-    };
-
-    const onTouchEnd = () => {
+    const endDrag = () => {
       if (draggingRef.current) {
         draggingRef.current = false;
         setIsDragging(false);
@@ -234,21 +263,34 @@ export const ImageViewerProvider = ({
       }
     };
 
+    const onMouseMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return;
+      e.preventDefault();
+      doMove(e.clientX, e.clientY);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!draggingRef.current || e.touches.length !== 1) return;
+      doMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    // 이미지 엘리먼트 밖으로 마우스가 나가더라도 드래그가 유지되도록 window 객체에 이벤트를 바인딩합니다.
     window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mouseup", endDrag);
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd);
-    window.addEventListener("touchcancel", onTouchEnd);
+    window.addEventListener("touchend", endDrag);
+    window.addEventListener("touchcancel", endDrag);
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mouseup", endDrag);
       window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("touchcancel", onTouchEnd);
+      window.removeEventListener("touchend", endDrag);
+      window.removeEventListener("touchcancel", endDrag);
     };
-  }, []);
+  }, [applyTransform]);
 
+  // 확대 여부 및 드래그 상태에 따른 마우스 커서 스타일 정의
   const cursorClass =
     scale > 1
       ? isDragging
@@ -263,7 +305,7 @@ export const ImageViewerProvider = ({
       {src && (
         <div
           className={cn(
-            "fixed inset-0 z-[9999] flex items-center justify-center",
+            "fixed inset-0 z-9999 flex items-center justify-center",
             "bg-black/85 backdrop-blur-sm cursor-zoom-out",
           )}
           onClick={close}
@@ -279,18 +321,18 @@ export const ImageViewerProvider = ({
             style={{
               maxWidth: "95vw",
               maxHeight: "95vh",
-              transform: `translate3d(${translateRef.current.x}px, ${translateRef.current.y}px, 0) scale(${scale})`,
-              transition: isDragging ? "none" : "transform 120ms ease-out",
+              // React의 통제를 완전히 배제하기 위해 transform 정보는 인라인 스타일에서 생략합니다.
               transformOrigin: "center center",
+              willChange: "transform", // GPU 하드웨어 가속을 강제합니다.
             }}
             draggable={false}
             onClick={(e) => e.stopPropagation()}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
+            onLoad={() => applyTransform(false)}
           />
 
-          {/* 하단 컨트롤 바 */}
           <div
             className="fixed bottom-5 inset-x-0 flex justify-center pointer-events-none"
             onClick={(e) => e.stopPropagation()}
@@ -306,7 +348,7 @@ export const ImageViewerProvider = ({
               >
                 -
               </button>
-              <span className="tabular-nums text-[11px] min-w-[4rem] text-center">
+              <span className="tabular-nums text-[11px] min-w-16 text-center">
                 {Math.round(scale * 100)}%
               </span>
               <button

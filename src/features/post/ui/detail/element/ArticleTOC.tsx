@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Link as LinkIcon, ListTree } from "lucide-react";
 import { scrollToId } from "@/lib/scrollToId";
 import { PostTocDTO } from "@/features/post/type/PostDetailDTO";
+import { useNumberedTOC } from "@/features/post/hook/useNumberedTOC";
 
 type Props = {
   headings: PostTocDTO[];
@@ -29,21 +30,7 @@ export default function ArticleTOC({
   title = "이 게시글에서는...",
   stickyOffset = 72,
 }: Props) {
-  if (!headings?.length) return null;
-
-  /**
-   * 서버에서 추출된 평면적인 TOC 데이터를 기반으로 계층 넘버링(1, 1.1, 1.1.1)을 생성합니다.
-   */
-  const numbered = React.useMemo(() => {
-    const counters = [0, 0, 0, 0, 0, 0];
-    return headings.map((h) => {
-      const d = Math.min(Math.max(h.depth, 1), 6);
-      counters[d - 1] += 1;
-      for (let i = d; i < 6; i++) counters[i] = 0;
-      const label = counters.slice(0, d).filter(Boolean).join(".");
-      return { ...h, label };
-    });
-  }, [headings]);
+  const numbered = useNumberedTOC(headings);
 
   const onNavigate = React.useCallback(
     (id: string) => {
@@ -61,7 +48,7 @@ export default function ArticleTOC({
   return (
     <aside
       className={cn(
-        "w-full md:sticky md:top-[var(--toc-sticky-top,0px)]",
+        "w-full md:sticky md:top-(--toc-sticky-top,0px)",
         className,
       )}
       style={
@@ -71,8 +58,8 @@ export default function ArticleTOC({
       }
       aria-label="Table of contents"
     >
-      <Card className="border-muted/50 bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75 pt-0">
-        <CardHeader className="py-4 px-4 border-b bg-gradient-to-b from-background/60 to-transparent">
+      <Card className="border-muted/50 bg-card/90 backdrop-blur supports-backdrop-filter:bg-card/75 pt-0">
+        <CardHeader className="py-4 px-4 border-b bg-linear-to-b from-background/60 to-transparent">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">
               {title}
@@ -109,7 +96,7 @@ export default function ArticleTOC({
                       <span
                         aria-hidden
                         className={cn(
-                          "ml-2 mr-2 h-5 w-[3px] rounded-full bg-border/70",
+                          "ml-2 mr-2 h-5 w-0.75 rounded-full bg-border/70",
                           isActive && "bg-foreground/70",
                         )}
                       />
@@ -123,7 +110,7 @@ export default function ArticleTOC({
                           h.depth >= 4 && "text-muted-foreground",
                         )}
                       >
-                        <span className="min-w-[2.5rem] text-xs tabular-nums text-muted-foreground pt-0.5">
+                        <span className="min-w-10 text-xs tabular-nums text-muted-foreground pt-0.5">
                           {h.label}.
                         </span>
                         <span className="flex-1">{h.text}</span>
