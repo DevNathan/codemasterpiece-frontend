@@ -4,7 +4,7 @@ export const deleteEntrySchema = z
   .object({
     entryId: z.string(),
     isAuthor: z.boolean(),
-    provider: z.enum(["GITHUB", "ANON"]),
+    provider: z.enum(["GITHUB", "GITLAB", "ANON"]),
     guestPassword: z
       .union([
         z.string().regex(/^\d{6}$/, "guestPin은 숫자 6자리여야 합니다."),

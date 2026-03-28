@@ -8,7 +8,7 @@ export const editEntrySchema = z
       .trim()
       .min(1, "내용은 필수입니다.")
       .max(2000, "내용은 2000자를 초과할 수 없습니다."),
-    provider: z.enum(["GITHUB", "ANON"]),
+    provider: z.enum(["GITHUB", "GITLAB", "ANON"]),
     isAuthor: z.boolean(),
     guestPassword: z
       .union([
