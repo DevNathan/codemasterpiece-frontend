@@ -116,7 +116,7 @@ export default function CommentEditForm({
         <Textarea
           {...register("content")}
           className={cn(
-            "min-h-[120px] resize-y",
+            "min-h-30 resize-y",
             errors.content &&
               "border-destructive focus-visible:ring-destructive",
           )}

@@ -8,6 +8,7 @@ import AuthToastHandler from "@/app/LoginToastHandler";
 import RQProvider from "@/contexts/RQProvider";
 import { AuthDialogProvider } from "@/contexts/AuthDialogProvider";
 import { ImageViewerProvider } from "@/contexts/ImageViewProvider";
+import PolicyDialogProvider from "@/contexts/PolicyDialogProvider";
 
 type Props = { children: ReactNode };
 
@@ -16,19 +17,21 @@ export default async function Providers({ children }: Props) {
     <AuthDialogProvider>
       <UserContextProvider>
         <RQProvider>
-          <ThemeProvider>
-            <SidebarProvider defaultOpen={false}>
-              <Tooltip delayDuration={500}>
-                <ImageViewerProvider>
-                  <Suspense>
-                    <Sooner />
-                    <AuthToastHandler />
-                  </Suspense>
-                  {children}
-                </ImageViewerProvider>
-              </Tooltip>
-            </SidebarProvider>
-          </ThemeProvider>
+          <PolicyDialogProvider>
+            <ThemeProvider>
+              <SidebarProvider defaultOpen={false}>
+                <Tooltip delayDuration={500}>
+                  <ImageViewerProvider>
+                    <Suspense>
+                      <Sooner />
+                      <AuthToastHandler />
+                    </Suspense>
+                    {children}
+                  </ImageViewerProvider>
+                </Tooltip>
+              </SidebarProvider>
+            </ThemeProvider>
+          </PolicyDialogProvider>
         </RQProvider>
       </UserContextProvider>
     </AuthDialogProvider>

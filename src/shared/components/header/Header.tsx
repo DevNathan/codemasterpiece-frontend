@@ -5,20 +5,21 @@ import Link from "next/link";
 import Logo from "@/shared/assets/logo/Logo";
 import { SidebarTrigger } from "@/shared/components/shadcn/sidebar";
 import { Button } from "@/shared/components/shadcn/button";
-import { BookIcon, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   Tooltip,
-  TooltipTrigger,
   TooltipContent,
+  TooltipTrigger,
 } from "@/shared/components/shadcn/tooltip";
 import { Kbd } from "@/shared/components/shadcn/kbd";
 import { DesktopSearchBar } from "@/shared/components/header/DesktopSearchBar";
-import HeaderUser from "@/shared/components/header/HeaderUser";
 import MobileSearch from "@/shared/components/header/MobileSearch";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/UserContext";
+import HeaderMenu from "@/shared/components/header/HeaderMenu";
 
-export default function Header() {
+export function Header() {
   // 모바일 검색 모달
+  const { user } = useAuth();
   const [openSearch, setOpenSearch] = useState(false);
 
   return (
@@ -91,25 +92,7 @@ export default function Header() {
             <Search className="h-5 w-5" />
           </Button>
 
-          {/* 공통: 방명록 */}
-          <Button
-            asChild
-            variant="outline"
-            className={cn(
-              "transition-all",
-              "px-2 lg:px-4",
-              "rounded-full",
-              "h-9 min-w-9 flex items-center justify-center",
-            )}
-            aria-label="방명록"
-          >
-            <Link href="/guest" className="flex items-center">
-              <BookIcon className="size-4 lg:mr-1" />
-              <span className="hidden lg:inline">방명록</span>
-            </Link>
-          </Button>
-
-          {/* 공통: 사용자 */}
+          {/* 메뉴 */}
           <Suspense
             fallback={
               <div
@@ -118,7 +101,7 @@ export default function Header() {
               />
             }
           >
-            <HeaderUser />
+            <HeaderMenu user={user} />
           </Suspense>
         </div>
       </div>

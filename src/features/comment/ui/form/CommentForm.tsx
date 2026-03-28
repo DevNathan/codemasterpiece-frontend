@@ -184,8 +184,8 @@ export default function CommentForm({ parentId }: Props) {
         >
           {/* 사용자 정보 헤더 */}
           <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <AuthHeader user={user as any} />
+            {(isAuthenticated && !!user) ? (
+              <AuthHeader user={user} />
             ) : (
               <AnonBadge />
             )}

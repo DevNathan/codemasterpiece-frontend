@@ -1,30 +1,33 @@
-"use client";
-
 import React from "react";
-import { Button } from "@/shared/components/shadcn/button";
-import { UserIcon } from "lucide-react";
-import { useAuth } from "@/contexts/UserContext";
-import UserDropdown from "@/shared/components/header/UserDropdown";
-import { useAuthDialog } from "@/contexts/AuthDialogProvider";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/shadcn/avatar";
+import { AppUser } from "@/features/auth/types/AppUser";
 
-const HeaderUser = () => {
-  const { user } = useAuth();
-  const { openDialog } = useAuthDialog();
+type Props = { user: AppUser };
 
-  return user ? (
-    <UserDropdown user={user} />
-  ) : (
-    <Button
-      className="flex items-center justify-center gap-2 px-2 sm:px-4"
-      type="button"
-      onClick={openDialog}
-    >
-      <div className="size-5 rounded-full bg-background flex items-center justify-center">
-        <UserIcon className="size-4 fill-primary" />
+export default function HeaderUser({ user }: Props) {
+  const isAuthor = user.role === "AUTHOR";
+
+  return (
+    <div className="px-3 pt-3 pb-2 flex items-center gap-3">
+      <Avatar className="size-9 ring-1 ring-border/80 shadow-sm">
+        <AvatarImage
+          src={user.avatarUrlSmall}
+          alt={user.nickname}
+        />
+        <AvatarFallback className="text-[11px] font-semibold">
+          {user.nickname.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <div className="text-sm font-semibold truncate">{user.nickname}</div>
+        <div className="text-[11px] text-muted-foreground tracking-wide">
+          {isAuthor ? "AUTHOR" : "READER"}
+        </div>
       </div>
-      <span className="hidden lg:inline">로그인</span>
-    </Button>
+    </div>
   );
-};
-
-export default HeaderUser;
+}

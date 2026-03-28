@@ -208,7 +208,7 @@ function HeadImageUploader({
       const loadingToast = toast.loading("이미지 업로드 중…");
 
       try {
-        const { data, timestamp } = await saveImage(file);
+        const { data, timestamp } = await saveImage(file, "BANNER");
         const { fileId, url } = data!;
 
         onPick(fileId, url);

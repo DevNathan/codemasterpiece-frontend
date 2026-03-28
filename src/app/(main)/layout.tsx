@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import ResponsiveHeader from "@/shared/components/header/Header";
+import {Header as ResponsiveHeader} from "@/shared/components/header/Header";
 import NavSection from "@/shared/components/nav/NavSection";
 import Footer from "@/shared/components/footer/Footer";
 

@@ -3,10 +3,7 @@ import { z } from "zod";
 export const EntryDTOSchema = z.object({
   entryId: z.string(),
   actorId: z.string(),
-  provider: z.union([
-    z.literal("GITHUB"),
-    z.literal("ANON"),
-  ]),
+  provider: z.enum(["GITHUB", "GITLAB", "ANON"]),
   profileImage: z.string(),
   nickname: z.string(),
   content: z.string(),

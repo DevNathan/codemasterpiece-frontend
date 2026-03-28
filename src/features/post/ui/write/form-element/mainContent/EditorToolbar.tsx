@@ -69,7 +69,7 @@ const EditorToolbar = ({
       const tid = toast.loading("이미지 업로드 중…");
 
       try {
-        const { data, timestamp } = await saveImage(file);
+        const { data, timestamp } = await saveImage(file, "BLOG_DEFAULT");
         const { fileId, url } = data!;
 
         onInsert(`![${file.name}](image-token://${fileId}`, `)`);

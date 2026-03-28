@@ -12,14 +12,14 @@ import {
   TooltipTrigger,
 } from "@/shared/components/shadcn/tooltip";
 import ShareDialog from "@/shared/components/share/ShareDialog";
-import PolicyDialog from "@/shared/components/footer/PolicyDialog";
 import MyHoverCard from "@/shared/components/footer/MyHoverCard";
+import { usePolicyDialog } from "@/contexts/PolicyDialogProvider";
 
 const SCROLL_THRESHOLD = 200;
 
 const Footer = () => {
   const router = useRouter();
-  const [policyOpen, setPolicyOpen] = useState(false);
+  const { openPolicyDialog } = usePolicyDialog();
   const [showToTop, setShowToTop] = useState(false);
 
   // 스크롤 위치에 따라 맨 위로 버튼 표시
@@ -49,9 +49,9 @@ const Footer = () => {
       aria-label="사이트 푸터"
     >
       {/* 상단 그라데이션 라인 */}
-      <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-linear-to-r from-transparent via-primary/60 to-transparent" />
 
-      <div className="mx-auto max-w-screen-xl px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           {/* 좌측: 로고/카피 */}
           <div className="space-y-2 text-center sm:text-left">
@@ -94,7 +94,7 @@ const Footer = () => {
                   type="button"
                   variant="outline"
                   aria-label="정책"
-                  onClick={() => setPolicyOpen(true)}
+                  onClick={openPolicyDialog}
                   className="
                     size-9 rounded-full border-border/70
                     hover:border-primary/70 hover:bg-primary/5
@@ -139,13 +139,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-
-      {/* 컨트롤드 정책 다이얼로그 */}
-      <PolicyDialog
-        open={policyOpen}
-        onOpenChangeAction={setPolicyOpen}
-        autoOpenIfNotAck={true}
-      />
 
       {/* 맨 위로 버튼 */}
       {showToTop && (

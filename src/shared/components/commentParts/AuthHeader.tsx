@@ -3,18 +3,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/shadcn/
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/shadcn/tooltip";
 import { Info } from "lucide-react";
 import SnapshotInfoDialog from "@/shared/components/commentParts/SnapshorInfoDialog";
+import { AppUser } from "@/features/auth/types/AppUser";
 
-export default function AuthHeader({ user }: { user?: { userId?: string; nickname?: string } }) {
+export default function AuthHeader({ user }: { user: AppUser }) {
   return (
     <div className="flex items-center gap-3">
       <Avatar className="h-12 w-12 ring-2 ring-point/40 shadow-sm">
-        <AvatarImage src={`https://avatars.githubusercontent.com/u/${user?.userId}?v=4`} alt={user?.nickname ?? "user"} />
+        <AvatarImage src={user.avatarUrlSmall} alt={user.nickname} />
         <AvatarFallback className="text-[11px] font-semibold">
-          {(user?.nickname ?? "US").slice(0, 2).toUpperCase()}
+          {(user.nickname).slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="flex items-center gap-1.5">
-        <p className="text-base sm:text-lg font-semibold tracking-tight">{user?.nickname ?? "사용자"}</p>
+        <p className="text-base sm:text-lg font-semibold tracking-tight">{user.nickname}</p>
         <SnapshotInfoDialog>
           <Tooltip delayDuration={150}>
             <TooltipTrigger asChild>

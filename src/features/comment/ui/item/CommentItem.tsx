@@ -115,31 +115,39 @@ export default function CommentItem({ comment }: { comment: CommentDTO }) {
             />
           )}
 
-          {!deleted && modifiable && !isEditing && (
-            <div className="flex justify-end mt-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleStartEdit}
-                disabled={isFetchingRaw}
-              >
-                {isFetchingRaw ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Pencil width={18} height={18} />
-                )}
-              </Button>
-              <HideToggleButton commentId={commentId} hidden={hidden} />
-              <DeleteConfirmDialog
-                commentId={commentId}
-                needPassword={needPassword}
-              />
+          {/* 하단 액션 버튼 영역 */}
+          <div className="flex justify-end mt-2 gap-1">
+            {/* 수정/숨김/삭제는 권한(modifiable)이 필요함 */}
+            {!deleted && modifiable && !isEditing && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleStartEdit}
+                  disabled={isFetchingRaw}
+                >
+                  {isFetchingRaw ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Pencil width={18} height={18} />
+                  )}
+                </Button>
+                <HideToggleButton commentId={commentId} hidden={hidden} />
+                <DeleteConfirmDialog
+                  commentId={commentId}
+                  needPassword={needPassword}
+                />
+              </>
+            )}
+
+            {/* 대댓글은 권한과 무관하게 삭제/숨김이 아닐 때 노출 */}
+            {!deleted && !hidden && !isEditing && (
               <ReplyButtonWithDropdown
                 nickname={nickname}
                 parentId={commentId}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       {children.length > 0 && <Children items={children} />}

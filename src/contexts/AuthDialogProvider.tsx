@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +9,8 @@ import {
   DialogTitle,
 } from "@/shared/components/shadcn/dialog";
 import Link from "next/link";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaGitlab } from "react-icons/fa";
+import Logo from "@/shared/assets/logo/Logo";
 
 type Ctx = {
   open: boolean;
@@ -32,21 +26,10 @@ export function AuthDialogProvider({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [path, setPath] = useState<string>("/");
+  const [path, setPath] = useState<string>("/ ");
 
-  const isClient = useSyncExternalStore(
-    () => () => {}, // 구독할 외부 저장소가 없으므로 빈 함수 반환
-    () => true, // 클라이언트 환경 스냅샷
-    () => false, // 서버 환경 스냅샷 (Hydration mismatch 방지)
-  );
-
-  /**
-   * @function openDialog
-   * @description 다이얼로그를 열기 직전에 현재 경로를 낚아챕니다.
-   * 불필요한 이펙트 동기화 대신, 실제 동작이 필요한 시점에 상태를 업데이트합니다.
-   */
   const openDialog = useCallback(() => {
-    const pathname = window.location.pathname || "/";
+    const pathname = window.location.pathname || "/ ";
     const search = window.location.search || "";
     setPath(pathname + search);
     setOpen(true);
@@ -54,47 +37,78 @@ export function AuthDialogProvider({
 
   const closeDialog = useCallback(() => setOpen(false), []);
 
-  const ctx = useMemo<Ctx>(
-    () => ({ open, openDialog, closeDialog }),
-    [open, openDialog, closeDialog],
-  );
-
-  const base = process.env.NEXT_PUBLIC_API_DOMAIN ?? "";
-  const loginUrl = isClient
-    ? `${base}/oauth2/authorization/github?ruri=${encodeURIComponent(path)}`
-    : `${base}/oauth2/authorization/github`;
+  const loginUrl = (provider: string) =>
+    `${process.env.NEXT_PUBLIC_API_DOMAIN}/oauth2/authorization/${provider}?ruri=${encodeURIComponent(path)}`;
 
   return (
-    <AuthDialogCtx.Provider value={ctx}>
+    <AuthDialogCtx.Provider value={{ open, openDialog, closeDialog }}>
       {children}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md backdrop-blur-xl bg-white/80 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-2xl p-8 text-center">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="text-2xl font-bold tracking-tight">
-              <span className="text-point">Code</span> Masterpiece
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              GitHub 계정으로 바로 시작하세요.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-100 p-0 overflow-hidden border-none shadow-2xl bg-background">
+          {/* 상단 헤더 섹션: 브랜드 아이덴티티 강조 */}
+          <div className="relative h-32 bg-linear-to-br from-point/20 via-background to-accent/20 flex items-center justify-center border-b border-border/50">
+            <div className="scale-150">
+              <Logo />
+            </div>
+          </div>
 
-          <div className="mt-8 flex flex-col items-center gap-6">
-            <Link
-              href={loginUrl}
-              aria-label="Sign in with GitHub"
-              className="group flex items-center justify-center gap-3 px-6 py-3 rounded-full
-                       bg-[#24292E] hover:bg-[#171A1D] text-white text-base font-semibold
-                       transition-all shadow-lg hover:shadow-xl active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#24292E]"
-            >
-              <FaGithub className="size-8 group-hover:scale-110 transition-transform" />
-              <span>Sign in with GitHub</span>
-            </Link>
+          <div className="p-8">
+            <DialogHeader className="items-center text-center space-y-2">
+              <DialogTitle className="text-2xl font-black tracking-tighter">
+                Welcome to <span className="text-point">Masterpiece</span>
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium text-muted-foreground">
+                선호하는 플랫폼으로 간편하게 시작하세요.
+              </DialogDescription>
+            </DialogHeader>
 
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              이 블로그는 별도의 개인정보를 결코 저장하지 않습니다.
-              <br className="hidden sm:block" />
-              GitHub로부터 <span className="font-medium">인증</span>만 받아요.
-            </p>
+            <div className="mt-8 flex flex-col gap-3">
+              {/* GitHub Login Button */}
+              <Link
+                href={loginUrl("github")}
+                className="group relative flex items-center justify-start gap-4 px-6 py-4 rounded-2xl
+                         bg-[#24292E] hover:bg-[#1B1F23] text-white
+                         transition-all duration-300 shadow-md hover:shadow-xl active:scale-[0.98]"
+              >
+                <FaGithub className="size-6 group-hover:rotate-12 transition-transform duration-300" />
+                <span className="font-bold tracking-tight">
+                  GitHub으로 계속하기
+                </span>
+                <div className="absolute inset-y-0 right-4 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  →
+                </div>
+              </Link>
+
+              {/* GitLab Login Button */}
+              <Link
+                href={loginUrl("gitlab")}
+                className="group relative flex items-center justify-start gap-4 px-6 py-4 rounded-2xl
+                         bg-[#FC6D26] hover:bg-[#E24329] text-white
+                         transition-all duration-300 shadow-md hover:shadow-xl active:scale-[0.98]"
+              >
+                <FaGitlab className="size-6 group-hover:rotate-12 transition-transform duration-300" />
+                <span className="font-bold tracking-tight">
+                  GitLab으로 계속하기
+                </span>
+                <div className="absolute inset-y-0 right-4 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  →
+                </div>
+              </Link>
+            </div>
+
+            <footer className="mt-8 text-center space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <div className="h-px w-8 bg-border" />
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Security First
+                </span>
+                <div className="h-px w-8 bg-border" />
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed px-4">
+                이 블로그는 별도의 개인정보를 결코 저장하지 않습니다. <br />
+                오직 <b>인증(Authentication)</b>만을 위해 OAuth를 사용합니다.
+              </p>
+            </footer>
           </div>
         </DialogContent>
       </Dialog>
@@ -105,6 +119,6 @@ export function AuthDialogProvider({
 export function useAuthDialog() {
   const ctx = useContext(AuthDialogCtx);
   if (!ctx)
-    throw new Error("useAuthDialog must be used within <AuthDialogProvider>");
+    throw new Error("useAuthDialog must be used within AuthDialogProvider");
   return ctx;
 }
